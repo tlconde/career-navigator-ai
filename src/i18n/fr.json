@@ -1,0 +1,103 @@
+{
+  "app": {
+    "title": "CareerBridge",
+    "tagline": "Votre assistant carrière IA",
+    "subtitle": "Outils gratuits pour vous aider à trouver du travail dans votre nouveau pays",
+    "footer": "Créé avec ❤️ pour aider les chercheurs d'emploi partout",
+    "credit": "Propulsé par la méthodologie career-ops"
+  },
+  "nav": {
+    "home": "Accueil",
+    "interview": "Entraînement entretien",
+    "cv": "Créer un CV",
+    "evaluate": "Évaluation d'offre",
+    "tips": "Conseils carrière"
+  },
+  "home": {
+    "hero": "Commencez votre parcours professionnel aujourd'hui",
+    "heroSub": "Des outils IA simples et gratuits pour les chercheurs d'emploi dans un nouveau pays. Pas de compte nécessaire.",
+    "interviewTitle": "Entraînement entretien",
+    "interviewDesc": "Entraînez-vous avec l'IA en utilisant la méthode STAR",
+    "cvTitle": "Créer un CV",
+    "cvDesc": "Créez un CV professionnel étape par étape avec l'aide de l'IA",
+    "evaluateTitle": "Évaluation d'offre",
+    "evaluateDesc": "Collez une offre d'emploi et obtenez une analyse complète",
+    "tipsTitle": "Conseils carrière",
+    "tipsDesc": "Discutez avec un coach carrière IA"
+  },
+  "interview": {
+    "title": "Entraînement entretien",
+    "subtitle": "Pratiquez avec l'IA en utilisant la méthode STAR+R",
+    "placeholder": "Tapez votre réponse ici...",
+    "jobPrompt": "Quel type de poste préparez-vous ?",
+    "jobPlaceholder": "ex: Serveur, Support IT, Magasinier...",
+    "start": "Commencer",
+    "quickPrompts": {
+      "challenge": "Parlez-moi d'un défi que vous avez relevé",
+      "teamwork": "Décrivez un travail d'équipe",
+      "project": "Présentez un projet réalisé",
+      "mistake": "Parlez d'une erreur dont vous avez appris"
+    }
+  },
+  "cv": {
+    "title": "Créer un CV",
+    "subtitle": "Nous vous aiderons à créer un CV professionnel étape par étape",
+    "step1": "Infos personnelles",
+    "step2": "Compétences",
+    "step3": "Expérience",
+    "step4": "Formation",
+    "step5": "Poste visé",
+    "name": "Nom complet",
+    "email": "Email",
+    "phone": "Téléphone",
+    "location": "Ville / Pays",
+    "skills": "Vos compétences (une par ligne)",
+    "skillsPlaceholder": "ex:\nService client\nMicrosoft Excel\nTravail d'équipe",
+    "jobTitle": "Intitulé du poste",
+    "company": "Entreprise",
+    "duration": "Durée",
+    "description": "Qu'avez-vous fait ?",
+    "addExperience": "+ Ajouter une expérience",
+    "degree": "Diplôme / Certificat",
+    "school": "École / Institution",
+    "year": "Année",
+    "addEducation": "+ Ajouter une formation",
+    "targetRole": "Quel poste recherchez-vous ?",
+    "targetPlaceholder": "ex: Représentant service client",
+    "generate": "Générer mon CV",
+    "generating": "Création en cours...",
+    "download": "Télécharger le CV",
+    "next": "Suivant",
+    "back": "Retour",
+    "preview": "Votre CV"
+  },
+  "evaluate": {
+    "title": "Évaluation d'offre",
+    "subtitle": "Collez une offre d'emploi et nous analyserons la compatibilité",
+    "jobDesc": "Description du poste",
+    "jobDescPlaceholder": "Collez la description complète ici...",
+    "yourSkills": "Vos compétences et expérience",
+    "yourSkillsPlaceholder": "Décrivez vos compétences et expérience...",
+    "analyze": "Analyser cette offre",
+    "analyzing": "Analyse en cours..."
+  },
+  "tips": {
+    "title": "Conseils carrière",
+    "subtitle": "Posez vos questions à notre coach carrière IA",
+    "placeholder": "Posez une question sur votre carrière...",
+    "quickPrompts": {
+      "salary": "Comment négocier mon salaire ?",
+      "coverLetter": "Aidez-moi à écrire une lettre de motivation",
+      "linkedin": "Comment améliorer mon profil LinkedIn ?",
+      "findJobs": "Comment trouver un emploi dans un nouveau pays ?",
+      "ats": "Qu'est-ce que l'ATS et comment le passer ?"
+    }
+  },
+  "common": {
+    "send": "Envoyer",
+    "loading": "Réflexion...",
+    "error": "Une erreur est survenue. Veuillez réessayer.",
+    "rateLimit": "Trop de requêtes. Veuillez patienter.",
+    "creditsExhausted": "Crédits IA épuisés. Réessayez plus tard."
+  }
+}
