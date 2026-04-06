@@ -2,34 +2,35 @@
 
 A warm, accessible web app that brings ideas from **[career-ops](https://github.com/santifer/career-ops)**—Santiago’s Claude Code job-search pipeline—to **refugees and newcomers**. No CLI, Git, or technical setup for end users: open the site, pick a language, and use the tools in the browser.
 
-> **Relationship to career-ops:** career-ops is a local-first CLI with 14 “modes” and rich prompts. CareerBridge exposes a **simplified, web-friendly slice** of that methodology (STAR+R interviews, ATS-oriented CV help, job evaluation, career coaching) via streaming AI. It is **not** a fork of career-ops; prompts and flows are adapted for people without a `cv.md` or developer workflow.
+> **Relationship to career-ops:** career-ops is a local-first CLI (14 modes, Playwright PDFs and portal scanning, Go dashboard, file-based tracker). CareerBridge exposes the **same coaching workflows** in the browser on the main pages, plus an **Advanced** area that maps to the remaining career-ops modes (scan, batch, tracker, pipeline, apply, outreach, deep, training, project). Heavy automation still lives in [career-ops](https://github.com/santifer/career-ops) on your machine; this app focuses on AI guidance and a simple local-only application table.
 
 ## Features
 
 | Area | Route | What it does |
 |------|--------|----------------|
-| **Home** | `/` | Hero, four feature entry points, language picker, footer credits |
-| **Interview practice** | `/interview` | Mock interviews guided by **STAR+R** (Situation, Task, Action, Result, Reflection) |
-| **CV / resume helper** | `/cv` | Step-style flow; AI helps structure and phrase an ATS-friendly markdown CV |
-| **Job evaluation** | `/evaluate` | Paste a job description (+ your context); get role summary, skills match, A–F-style match score, action plan, interview prompts |
-| **Career tips** | `/tips` | Coaching chat with quick prompts (negotiation, cover letters, LinkedIn, ATS, job search) |
+| **Home** | `/` | Hero, four feature cards, link to Advanced, language picker, footer |
+| **Interview practice** | `/interview` | Mock interviews guided by **STAR+R** |
+| **CV / resume helper** | `/cv` | Step-style flow; ATS-oriented markdown CV; upload `.txt/.md` or **PDF** (client-side text extraction via pdf.js) |
+| **Job evaluation** | `/evaluate` | Single JD analysis (career-ops–style blocks, simplified) |
+| **Career tips** | `/tips` | General coaching chat |
+| **Advanced** | `/advanced` | Hub for scan, batch, tracker (browser-local), pipeline, apply, outreach, deep, training, project |
 
-**Internationalization:** English, Arabic (RTL), Ukrainian, French, Spanish, Turkish (`react-i18next`, JSON under `src/i18n/`). Arabic sets `dir="rtl"` on the document when selected.
+**Internationalization:** English, Arabic (RTL), Ukrainian, French, Spanish, Turkish. Non-English bundles fall back to English for strings that are not translated yet (e.g. Advanced copy).
 
-**Privacy posture:** The product goal is **stateless use**—no account required for the tools; chat goes to your edge function and is not designed to persist application data in-app. (Supabase client in the repo may still use default auth storage if you use other Supabase features later.)
+**Privacy:** Chat is processed by your edge function; the **application tracker** stores rows only in the user’s browser (`localStorage`) with optional CSV export.
 
 ## Tech stack
 
 - **Frontend:** Vite, React 18, TypeScript, Tailwind CSS, shadcn/ui, React Router
-- **AI:** Supabase Edge Function `supabase/functions/career-coach` → Lovable AI Gateway (`LOVABLE_API_KEY`), streaming SSE to the client
-- **Client:** `src/lib/chat.ts` posts to `{VITE_SUPABASE_URL}/functions/v1/career-coach`
+- **AI:** Supabase Edge Function `supabase/functions/career-coach` → Lovable AI Gateway (`LOVABLE_API_KEY`), streaming SSE
+- **Client:** `src/lib/chat.ts` → `{VITE_SUPABASE_URL}/functions/v1/career-coach`
 
 ## Local development
 
 ### Prerequisites
 
 - Node.js 18+ (20+ recommended)
-- A Supabase project with the `career-coach` function deployed (or local Supabase CLI if you use it)
+- A Supabase project with the `career-coach` function deployed (or Supabase CLI locally)
 
 ### Setup
 
@@ -41,24 +42,20 @@ npm install
 
 Copy environment variables (see `.env.example`):
 
-- `VITE_SUPABASE_URL` — your Supabase project URL  
-- `VITE_SUPABASE_PUBLISHABLE_KEY` — Supabase anon/public key (used as `Bearer` for the functions invoke URL)
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
 
 ```bash
 npm run dev
 ```
 
-### Edge function secrets
+### Edge function
 
-Configure **`LOVABLE_API_KEY`** in Supabase (Dashboard → Edge Functions → secrets, or CLI) so `career-coach` can call the gateway.
-
-Deploy the function from the repo root (with Supabase CLI linked to your project):
+Set **`LOVABLE_API_KEY`** in Supabase secrets. Deploy:
 
 ```bash
 supabase functions deploy career-coach --no-verify-jwt
 ```
-
-(Adjust `--no-verify-jwt` vs JWT verification to match your security model; Lovable-hosted projects often document the expected setup.)
 
 ### Scripts
 
@@ -70,23 +67,38 @@ supabase functions deploy career-coach --no-verify-jwt
 | `npm run lint` | ESLint |
 | `npm test` | Vitest |
 
+### Troubleshooting (Windows)
+
+- **`vite` is not recognized:** Scripts invoke Vite via `node ./node_modules/vite/bin/vite.js` so a broken `PATH` to `node_modules/.bin` does not block `npm run dev`. If installs fail, delete `node_modules` and `package-lock.json`, then run `npm install` again.
+- **`npm warn tar TAR_ENTRY_ERROR UNKNOWN`:** Often antivirus, sync folders (OneDrive), or file locks. Try: pause AV for the project folder, move the repo to a short path like `C:\dev\...`, close editors holding files, then reinstall.
+- **Stay on Vite 5.x:** This repo pins **`vite` to `5.4.21`**. Do **not** run `npm audit fix --force` to “fix” esbuild — it jumps to **Vite 8**, conflicts with `@vitejs/plugin-react-swc` / `lovable-tagger`, and triggers Rolldown / `jsx` warnings. We use an **`overrides`** entry for **`esbuild`** so `npm audit` stays clean without upgrading Vite.
+- **Seeing Vite 8 in the terminal?** You are not using this repo’s install (or you ran a global `vite`). Run **`npm install`** here, then **`npm run dev`** — the script must call the local `node_modules` binary (see `package.json` scripts).
+- **Browserslist “caniuse-lite is old”:** Run `npm install caniuse-lite@latest` in the project (updates the lockfile). Ignore tools that try to use **Bun** if you don’t have it installed.
+
+### Security / `npm audit`
+
+`npm audit` only reports issues in **this project’s dependency tree**. It does not scan your whole PC. Keeping **`npm audit`** at **0** in this folder is done with the pinned Vite + `esbuild` override; avoid `--force` upgrades that pull Vite 8.
+
 ## Project layout (high level)
 
 ```
 src/
-  pages/           # Index, Interview, CVBuilder, Evaluate, Tips, NotFound
-  components/      # Layout, LanguagePicker, ChatInterface, UI primitives
-  i18n/            # config + en, ar, uk, fr, es, tr
-  lib/             # chat streaming client, prompts (mirror / reference for edge prompts)
-supabase/functions/career-coach/   # Deno edge function (authoritative server prompts)
-.lovable/plan.md                   # Original product/architecture notes
+  pages/           # Index, Interview, CVBuilder, Evaluate, Tips, Advanced, AdvancedTool
+  components/      # Layout, LanguagePicker, ChatInterface, ApplicationTracker, UI
+  lib/             # coach-types, chat client
+  i18n/
+supabase/functions/career-coach/
+.lovable/plan.md
 ```
 
 ## Credits
 
-- Methodology and inspiration: **[santifer/career-ops](https://github.com/santifer/career-ops)** (MIT).
-- Footer on the app also references the **[AI Opportunity Fund](https://aiopportunityfund.withgoogle.com)**.
+Methodology and inspiration: **[santifer/career-ops](https://github.com/santifer/career-ops)** (MIT).
 
 ## License
 
-Add or confirm your license file at the repo root (e.g. MIT) if you intend open-source distribution.
+[MIT](LICENSE). Methodology credit: [career-ops](https://github.com/santifer/career-ops) (MIT).
+
+### AI quotas
+
+The chat client calls the Supabase `career-coach` edge function. Rate limits and credit exhaustion surface as toasts (`429` / `402`); see `src/lib/chat.ts` and `common.*` i18n keys.

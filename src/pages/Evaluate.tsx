@@ -16,10 +16,12 @@ const Evaluate = () => {
   const [userSkills, setUserSkills] = useState('');
   const [result, setResult] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showRetry, setShowRetry] = useState(false);
 
   const analyze = async () => {
     if (!jobDesc.trim()) return;
     setIsLoading(true);
+    setShowRetry(false);
     setResult('');
 
     let output = '';
@@ -36,9 +38,13 @@ const Evaluate = () => {
         output += chunk;
         setResult(output);
       },
-      onDone: () => setIsLoading(false),
+      onDone: () => {
+        setIsLoading(false);
+        setShowRetry(false);
+      },
       onError: (errorType) => {
         setIsLoading(false);
+        setShowRetry(true);
         toast({ title: t(`common.${errorType}`), variant: 'destructive' });
       },
     });
@@ -71,13 +77,20 @@ const Evaluate = () => {
             />
           </div>
 
-          <Button onClick={analyze} disabled={!jobDesc.trim() || isLoading} className="w-full">
-            {isLoading ? (
-              <><Loader2 className="h-4 w-4 animate-spin mr-2" /> {t('evaluate.analyzing')}</>
-            ) : (
-              t('evaluate.analyze')
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button onClick={analyze} disabled={!jobDesc.trim() || isLoading} className="w-full sm:flex-1">
+              {isLoading ? (
+                <><Loader2 className="h-4 w-4 animate-spin mr-2" /> {t('evaluate.analyzing')}</>
+              ) : (
+                t('evaluate.analyze')
+              )}
+            </Button>
+            {showRetry && !isLoading && (
+              <Button type="button" variant="outline" onClick={analyze} disabled={!jobDesc.trim()} className="w-full sm:w-auto">
+                {t('evaluate.retry')}
+              </Button>
             )}
-          </Button>
+          </div>
         </div>
 
         {result && (

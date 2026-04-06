@@ -4,18 +4,24 @@
     "tagline": "Your AI Career Assistant",
     "subtitle": "Free tools to help you find work in your new country",
     "footer": "Built with ❤️ to help job seekers everywhere",
-    "credit": "Powered by career-ops methodology"
+    "footerCredit": "Job-search methodology from the open-source project",
+    "footerMoreTools": "More tools"
   },
   "nav": {
     "home": "Home",
     "interview": "Interview Practice",
     "cv": "CV Builder",
     "evaluate": "Job Evaluation",
-    "tips": "Career Tips"
+    "tips": "Career Tips",
+    "advanced": "Advanced"
   },
   "home": {
     "hero": "Start your career journey today",
     "heroSub": "Simple, free AI tools designed for job seekers in a new country. No account needed — your privacy matters.",
+    "privacyLine": "No account needed • Nothing saved on our servers • Private",
+    "advancedTeaserTitle": "Full career-ops toolkit",
+    "advancedTeaserBody": "Portal search planning, batch evaluation, application tracker, pipeline, outreach, and more — in one place.",
+    "advancedTeaserCta": "Open Advanced tools",
     "interviewTitle": "Interview Practice",
     "interviewDesc": "Practice answering interview questions with AI feedback using the STAR method",
     "cvTitle": "CV / Resume Builder",
@@ -23,7 +29,14 @@
     "evaluateTitle": "Job Evaluation",
     "evaluateDesc": "Paste a job description and get a match score, gap analysis, and action plan",
     "tipsTitle": "Career Tips",
-    "tipsDesc": "Chat with an AI career coach about salary, cover letters, LinkedIn, and more"
+    "tipsDesc": "Chat with an AI career coach about salary, cover letters, LinkedIn, and more",
+    "startPathTitle": "Start here",
+    "startPathIntro": "Pick a language (top right), then:",
+    "startPathEvaluate": "Evaluate a job",
+    "startPathCv": "Build your CV",
+    "startPathTracker": "Track applications",
+    "privacyBanner": "Chats go through the AI service; the application tracker and your CV edits stay on this device unless you export.",
+    "privacyDismiss": "Got it"
   },
   "interview": {
     "title": "Interview Practice",
@@ -51,6 +64,9 @@
     "email": "Email",
     "phone": "Phone",
     "location": "City / Country",
+    "linkedin": "LinkedIn profile URL (optional)",
+    "github": "GitHub profile URL (optional)",
+    "languagesPlaceholder": "Languages (e.g. English — fluent, Dutch — intermediate). Leave empty if not needed.",
     "skills": "Your skills (one per line)",
     "skillsPlaceholder": "e.g.\nCustomer service\nMicrosoft Excel\nTeamwork",
     "jobTitle": "Job Title",
@@ -69,7 +85,40 @@
     "download": "Download CV",
     "next": "Next",
     "back": "Back",
-    "preview": "Your CV"
+    "preview": "Your CV",
+    "previewHelp": "Edit the markdown directly, or use Apply AI suggestions to merge optimization tips into the CV.",
+    "editMarkdown": "Edit",
+    "previewRendered": "Preview",
+    "applySuggestions": "Apply AI suggestions",
+    "applying": "Applying…",
+    "applyDone": "CV updated",
+    "editQuestionnaire": "Edit questionnaire",
+    "backToTargetRole": "Back to target role",
+    "startOver": "Start over",
+    "regenerate": "Regenerate CV",
+    "regenerateHint": "Change answers above, then regenerate — or edit the CV text after it is generated.",
+    "uploadTitle": "Upload an existing CV",
+    "uploadHint": "Text or Markdown (.txt, .md) up to 512 KB, or PDF up to 3 MB. PDFs are read in your browser with pdf.js (text-based PDFs work best; scanned images need OCR elsewhere). Word: export as PDF or .txt first.",
+    "uploadButton": "Choose file",
+    "uploadClear": "Remove file",
+    "uploadBadType": "Use a .txt, .md, or .pdf file.",
+    "uploadTooLarge": "File is too large (max 512 KB for text).",
+    "uploadPdfTooLarge": "PDF is too large (max 3 MB).",
+    "uploadPdfParsing": "Reading PDF…",
+    "uploadPdfEmpty": "No text found in this PDF. It may be scanned images — try a text-based PDF or paste text from another app.",
+    "uploadPdfError": "Could not read this PDF. Try another export or use .txt / .md.",
+    "uploadOk": "File loaded",
+    "uploadReadError": "Could not read that file.",
+    "uploadChars": "characters",
+    "structuringFields": "Filling fields from your resume…",
+    "structureDone": "Fields updated from your resume",
+    "structurePartial": "Could not parse structured data",
+    "structurePartialHint": "We filled what we could from your file. Check and edit the fields below.",
+    "structureFailed": "Could not reach AI to refine fields — you can still edit manually.",
+    "structureHeuristicOnly": "Contact details detected from your file",
+    "structureHeuristicOnlyHint": "AI did not return structured data. We kept email, phone, or links we found — review and edit the fields below.",
+    "uploadAttached": "CV file attached",
+    "uploadReplace": "Replace file"
   },
   "evaluate": {
     "title": "Job Evaluation",
@@ -79,7 +128,8 @@
     "yourSkills": "Your Skills & Experience",
     "yourSkillsPlaceholder": "Tell us about your skills and experience (a few sentences is fine)...",
     "analyze": "Analyze This Job",
-    "analyzing": "Analyzing..."
+    "analyzing": "Analyzing...",
+    "retry": "Try again"
   },
   "tips": {
     "title": "Career Tips",
@@ -92,6 +142,96 @@
       "findJobs": "How to find jobs in a new country?",
       "ats": "What is ATS and how to pass it?"
     }
+  },
+  "advanced": {
+    "title": "Advanced tools",
+    "subtitle": "The rest of the career-ops playbook in your browser: coaching for scanning, batch review, applications, outreach, research, and more. Heavy automation (Playwright portal scraping, PDF rendering, Go dashboard) still lives in the open-source CLI.",
+    "whyTitle": "Why isn’t everything identical to career-ops?",
+    "whyBody": "career-ops runs on your computer with Claude Code, Playwright (real browser sessions for listings and PDFs), and a terminal dashboard. This site delivers the same AI workflows without installing tools. Use career-ops on your machine when you want full automation; use CareerBridge when you need a simple web entry point.",
+    "careerOpsRepo": "career-ops on GitHub",
+    "openTool": "Open",
+    "back": "Back to Advanced",
+    "quick": {
+      "batchTemplate": "Example: 3 jobs with ---",
+      "batchTemplateMsg": "Here is my background in 3–5 sentences: [paste].\n\n---\n\nJob 1 JD:\n[paste]\n\n---\n\nJob 2 JD:\n[paste]\n\n---\n\nJob 3 JD:\n[paste]\n\nPlease give each job a short title, grade A–F, and top 3 strengths or gaps for me.",
+      "pipelineTemplate": "Example: prioritize my list",
+      "pipelineTemplateMsg": "I have these roles to process (URLs or titles, one per line):\n[paste list]\n\nHelp me decide order to tackle them and what to do first for each.",
+      "outreachLinkedIn": "LinkedIn note template",
+      "outreachLinkedInMsg": "Help me write a short LinkedIn connection note to a recruiter at [company]. I am interested in [role type]. Keep it under 300 characters, warm and professional."
+    },
+    "tools": {
+      "scan": {
+        "title": "Job & portal scan coach",
+        "desc": "Plan where and how to look (company sites, Ashby, Greenhouse, Lever, boards). The CLI can auto-scan; here the AI helps you build habits and target lists.",
+        "placeholder": "Ask how to find openings at a company, which boards to check, or how to set up a weekly search routine..."
+      },
+      "batch": {
+        "title": "Batch job evaluation",
+        "desc": "Evaluate several postings in one go. Paste your background, then each job separated by a line containing only ---.",
+        "placeholder": "Paste your background, then each job description separated by ---"
+      },
+      "tracker": {
+        "title": "Application tracker",
+        "desc": "Track companies, roles, and status in a simple table. Stored only in this browser (export CSV anytime).",
+        "placeholder": ""
+      },
+      "pipeline": {
+        "title": "Pipeline & pending URLs",
+        "desc": "Turn a backlog of links or titles into a clear order of attack and next actions—like career-ops pipeline mode, coach-only in the browser.",
+        "placeholder": "Paste URLs or job lines you have not applied to yet. Ask how to prioritize and what to do next..."
+      },
+      "apply": {
+        "title": "Application form coach",
+        "desc": "Help answering long-form application questions, choosing examples, and keeping a consistent story—aligned with career-ops apply mode.",
+        "placeholder": "Paste an application question or describe the form section you are stuck on..."
+      },
+      "outreach": {
+        "title": "Outreach & LinkedIn messages",
+        "desc": "Draft short, respectful outreach (LinkedIn, email, follow-ups) inspired by career-ops contacto mode.",
+        "placeholder": "Who are you writing to, and what role or company? Paste any draft you have..."
+      },
+      "deep": {
+        "title": "Deep company research",
+        "desc": "Structured research on culture, product, interview style, and public signals—like career-ops deep mode (web-grounded answers depend on what you paste).",
+        "placeholder": "Name the company and paste links or snippets you already found, or ask what to look for..."
+      },
+      "training": {
+        "title": "Course & certificate check",
+        "desc": "Decide if a course, bootcamp, or cert is worth your time for your target roles—career-ops training mode, simplified.",
+        "placeholder": "Paste the course or certificate details and your career goal..."
+      },
+      "project": {
+        "title": "Portfolio project review",
+        "desc": "Stress-test a side project or portfolio piece for interviews—career-ops project mode framing.",
+        "placeholder": "Describe your project, stack, and what role you are targeting..."
+      }
+    },
+    "tracker": {
+      "storageNote": "Data stays in your browser only. Clearing site data removes it.",
+      "exportCsv": "Download CSV",
+      "addRow": "Add row",
+      "empty": "No applications yet. Add a row to start tracking.",
+      "colCompany": "Company",
+      "colRole": "Role",
+      "colStatus": "Status",
+      "colUrl": "Link",
+      "colNotes": "Notes",
+      "phCompany": "Company name",
+      "phRole": "Job title",
+      "phStatus": "e.g. Applied",
+      "phNotes": "Interview date, contact…",
+      "remove": "Remove row",
+      "statusApplied": "Applied",
+      "importCsv": "Import CSV",
+      "importCsvOk": "Imported rows from CSV",
+      "importCsvInvalid": "Could not read that CSV. Check the format matches export.",
+      "importReplaceConfirm": "Replace all current rows with the file? OK = replace, Cancel = add to existing rows."
+    }
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "That link doesn’t exist or was moved.",
+    "home": "Back to home"
   },
   "common": {
     "send": "Send",

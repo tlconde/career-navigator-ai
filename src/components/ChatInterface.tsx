@@ -6,17 +6,26 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { streamChat } from '@/lib/chat';
 import { useToast } from '@/hooks/use-toast';
+import type { ChatCoachType } from '@/lib/coach-types';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
 interface ChatInterfaceProps {
-  type: 'interview' | 'cv' | 'evaluate' | 'tips';
+  type: ChatCoachType;
   quickPrompts?: { label: string; message: string }[];
   initialMessages?: Msg[];
   context?: string;
+  /** Overrides default placeholder resolution for advanced tools. */
+  inputPlaceholder?: string;
 }
 
-const ChatInterface = ({ type, quickPrompts, initialMessages = [], context }: ChatInterfaceProps) => {
+const ChatInterface = ({
+  type,
+  quickPrompts,
+  initialMessages = [],
+  context,
+  inputPlaceholder,
+}: ChatInterfaceProps) => {
   const { t, i18n } = useTranslation();
   const { toast } = useToast();
   const [messages, setMessages] = useState<Msg[]>(initialMessages);
@@ -134,7 +143,7 @@ const ChatInterface = ({ type, quickPrompts, initialMessages = [], context }: Ch
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={t(`${type}.placeholder`) || t('common.send')}
+            placeholder={inputPlaceholder ?? t(`${type}.placeholder`, { defaultValue: t('common.send') })}
             className="min-h-[48px] max-h-[120px] resize-none"
             rows={1}
           />

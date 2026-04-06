@@ -15,6 +15,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     { path: '/cv', label: t('nav.cv') },
     { path: '/evaluate', label: t('nav.evaluate') },
     { path: '/tips', label: t('nav.tips') },
+    { path: '/advanced', label: t('nav.advanced') },
   ];
 
   return (
@@ -81,14 +82,20 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         <div className="max-w-6xl mx-auto px-4 text-center text-sm text-muted-foreground space-y-1">
           <p>{t('app.footer')}</p>
           <p>
-            {t('app.credit')} •{' '}
+            <Link to="/advanced" className="underline hover:text-foreground transition-colors">
+              {t('app.footerMoreTools')}
+            </Link>
+            <span aria-hidden className="mx-1.5">
+              ·
+            </span>
+            {t('app.footerCredit')}{' '}
             <a
-              href="https://aiopportunityfund.withgoogle.com"
+              href="https://github.com/santifer/career-ops"
               target="_blank"
               rel="noopener noreferrer"
               className="underline hover:text-foreground transition-colors"
             >
-              AI Opportunity Fund
+              career-ops
             </a>
           </p>
         </div>

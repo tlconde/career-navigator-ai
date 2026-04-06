@@ -23,7 +23,7 @@ The career-ops repo is a CLI tool with 14 AI "modes" containing carefully engine
 - Welcoming hero: "Your AI Career Assistant" — tagline about free tools for job seekers in a new country
 - 4 illustrated feature cards (Interview Practice, CV Builder, Job Evaluation, Career Tips)
 - Language picker (top-right): English, Arabic (RTL support), Ukrainian, French, Spanish, Turkish
-- Footer crediting career-ops and linking to AI Opportunity Fund
+- Footer crediting career-ops (link to GitHub)
 
 ### Interview Practice (`/interview`)
 - User selects a job type or pastes a job description

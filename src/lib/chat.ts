@@ -1,3 +1,5 @@
+import type { ChatCoachType } from '@/lib/coach-types';
+
 type Msg = { role: "user" | "assistant"; content: string };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/career-coach`;
@@ -12,7 +14,7 @@ export async function streamChat({
   onError,
 }: {
   messages: Msg[];
-  type: "interview" | "cv" | "evaluate" | "tips";
+  type: ChatCoachType;
   language: string;
   context?: string;
   onDelta: (text: string) => void;
