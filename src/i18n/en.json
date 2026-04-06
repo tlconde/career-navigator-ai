@@ -1,0 +1,103 @@
+{
+  "app": {
+    "title": "CareerBridge",
+    "tagline": "Your AI Career Assistant",
+    "subtitle": "Free tools to help you find work in your new country",
+    "footer": "Built with ❤️ to help job seekers everywhere",
+    "credit": "Powered by career-ops methodology"
+  },
+  "nav": {
+    "home": "Home",
+    "interview": "Interview Practice",
+    "cv": "CV Builder",
+    "evaluate": "Job Evaluation",
+    "tips": "Career Tips"
+  },
+  "home": {
+    "hero": "Start your career journey today",
+    "heroSub": "Simple, free AI tools designed for job seekers in a new country. No account needed — your privacy matters.",
+    "interviewTitle": "Interview Practice",
+    "interviewDesc": "Practice answering interview questions with AI feedback using the STAR method",
+    "cvTitle": "CV / Resume Builder",
+    "cvDesc": "Build a professional CV step by step with AI help — optimized for job application systems",
+    "evaluateTitle": "Job Evaluation",
+    "evaluateDesc": "Paste a job description and get a match score, gap analysis, and action plan",
+    "tipsTitle": "Career Tips",
+    "tipsDesc": "Chat with an AI career coach about salary, cover letters, LinkedIn, and more"
+  },
+  "interview": {
+    "title": "Interview Practice",
+    "subtitle": "Practice with AI using the STAR+R method (Situation, Task, Action, Result, Reflection)",
+    "placeholder": "Type your answer here...",
+    "jobPrompt": "What type of job are you preparing for?",
+    "jobPlaceholder": "e.g., Restaurant server, IT support, Warehouse worker...",
+    "start": "Start Practice",
+    "quickPrompts": {
+      "challenge": "Tell me about a challenge you faced",
+      "teamwork": "Describe a time you worked in a team",
+      "project": "Walk me through a project you completed",
+      "mistake": "Tell me about a mistake you learned from"
+    }
+  },
+  "cv": {
+    "title": "CV / Resume Builder",
+    "subtitle": "We'll help you build a professional CV step by step",
+    "step1": "Personal Info",
+    "step2": "Skills",
+    "step3": "Experience",
+    "step4": "Education",
+    "step5": "Target Role",
+    "name": "Full Name",
+    "email": "Email",
+    "phone": "Phone",
+    "location": "City / Country",
+    "skills": "Your skills (one per line)",
+    "skillsPlaceholder": "e.g.\nCustomer service\nMicrosoft Excel\nTeamwork",
+    "jobTitle": "Job Title",
+    "company": "Company",
+    "duration": "Duration (e.g., 2020-2023)",
+    "description": "What did you do?",
+    "addExperience": "+ Add Experience",
+    "degree": "Degree / Certificate",
+    "school": "School / Institution",
+    "year": "Year",
+    "addEducation": "+ Add Education",
+    "targetRole": "What job are you looking for?",
+    "targetPlaceholder": "e.g., Customer service representative",
+    "generate": "Generate My CV",
+    "generating": "Creating your CV...",
+    "download": "Download CV",
+    "next": "Next",
+    "back": "Back",
+    "preview": "Your CV"
+  },
+  "evaluate": {
+    "title": "Job Evaluation",
+    "subtitle": "Paste a job description and we'll analyze how well it fits you",
+    "jobDesc": "Job Description",
+    "jobDescPlaceholder": "Paste the full job description here...",
+    "yourSkills": "Your Skills & Experience",
+    "yourSkillsPlaceholder": "Tell us about your skills and experience (a few sentences is fine)...",
+    "analyze": "Analyze This Job",
+    "analyzing": "Analyzing..."
+  },
+  "tips": {
+    "title": "Career Tips",
+    "subtitle": "Ask our AI career coach anything about finding work",
+    "placeholder": "Ask a question about your career...",
+    "quickPrompts": {
+      "salary": "How do I negotiate salary?",
+      "coverLetter": "Help me write a cover letter",
+      "linkedin": "How to improve my LinkedIn profile?",
+      "findJobs": "How to find jobs in a new country?",
+      "ats": "What is ATS and how to pass it?"
+    }
+  },
+  "common": {
+    "send": "Send",
+    "loading": "Thinking...",
+    "error": "Something went wrong. Please try again.",
+    "rateLimit": "Too many requests. Please wait a moment.",
+    "creditsExhausted": "AI credits used up. Please try again later."
+  }
+}

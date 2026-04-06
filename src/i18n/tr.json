@@ -1,0 +1,103 @@
+{
+  "app": {
+    "title": "CareerBridge",
+    "tagline": "AI Kariyer Asistanınız",
+    "subtitle": "Yeni ülkenizde iş bulmanıza yardımcı olacak ücretsiz araçlar",
+    "footer": "İş arayanlar için ❤️ ile yapıldı",
+    "credit": "career-ops metodolojisi ile desteklenmektedir"
+  },
+  "nav": {
+    "home": "Ana Sayfa",
+    "interview": "Mülakat Pratiği",
+    "cv": "CV Oluşturucu",
+    "evaluate": "İş Değerlendirme",
+    "tips": "Kariyer İpuçları"
+  },
+  "home": {
+    "hero": "Kariyer yolculuğunuza bugün başlayın",
+    "heroSub": "Yeni bir ülkede iş arayanlar için basit, ücretsiz AI araçları. Hesap gerekmez.",
+    "interviewTitle": "Mülakat Pratiği",
+    "interviewDesc": "STAR yöntemi ile AI geri bildirimi alarak mülakat sorularını pratik edin",
+    "cvTitle": "CV Oluşturucu",
+    "cvDesc": "AI yardımıyla adım adım profesyonel CV oluşturun",
+    "evaluateTitle": "İş Değerlendirme",
+    "evaluateDesc": "İş ilanını yapıştırın ve uyumluluk analizi alın",
+    "tipsTitle": "Kariyer İpuçları",
+    "tipsDesc": "AI kariyer koçu ile maaş, CV ve daha fazlası hakkında konuşun"
+  },
+  "interview": {
+    "title": "Mülakat Pratiği",
+    "subtitle": "STAR+R yöntemi ile AI ile pratik yapın",
+    "placeholder": "Cevabınızı buraya yazın...",
+    "jobPrompt": "Hangi tür bir iş için hazırlanıyorsunuz?",
+    "jobPlaceholder": "örn: Garson, IT Destek, Depo İşçisi...",
+    "start": "Pratiğe Başla",
+    "quickPrompts": {
+      "challenge": "Karşılaştığınız bir zorluğu anlatın",
+      "teamwork": "Ekip çalışması deneyiminizi anlatın",
+      "project": "Tamamladığınız bir projeyi anlatın",
+      "mistake": "Öğrendiğiniz bir hatayı anlatın"
+    }
+  },
+  "cv": {
+    "title": "CV Oluşturucu",
+    "subtitle": "Adım adım profesyonel CV oluşturmanıza yardımcı olacağız",
+    "step1": "Kişisel Bilgiler",
+    "step2": "Beceriler",
+    "step3": "Deneyim",
+    "step4": "Eğitim",
+    "step5": "Hedef Pozisyon",
+    "name": "Ad Soyad",
+    "email": "E-posta",
+    "phone": "Telefon",
+    "location": "Şehir / Ülke",
+    "skills": "Becerileriniz (her satıra bir tane)",
+    "skillsPlaceholder": "örn:\nMüşteri hizmetleri\nMicrosoft Excel\nTakım çalışması",
+    "jobTitle": "İş Unvanı",
+    "company": "Şirket",
+    "duration": "Süre",
+    "description": "Ne yaptınız?",
+    "addExperience": "+ Deneyim Ekle",
+    "degree": "Diploma / Sertifika",
+    "school": "Okul / Kurum",
+    "year": "Yıl",
+    "addEducation": "+ Eğitim Ekle",
+    "targetRole": "Hangi işi arıyorsunuz?",
+    "targetPlaceholder": "örn: Müşteri hizmetleri temsilcisi",
+    "generate": "CV'mi Oluştur",
+    "generating": "CV'niz oluşturuluyor...",
+    "download": "CV'yi İndir",
+    "next": "İleri",
+    "back": "Geri",
+    "preview": "CV'niz"
+  },
+  "evaluate": {
+    "title": "İş Değerlendirme",
+    "subtitle": "İş ilanını yapıştırın, uyumluluğunu analiz edelim",
+    "jobDesc": "İş Tanımı",
+    "jobDescPlaceholder": "İş tanımının tamamını buraya yapıştırın...",
+    "yourSkills": "Becerileriniz ve Deneyiminiz",
+    "yourSkillsPlaceholder": "Becerilerinizi ve deneyiminizi anlatın...",
+    "analyze": "Bu İşi Analiz Et",
+    "analyzing": "Analiz ediliyor..."
+  },
+  "tips": {
+    "title": "Kariyer İpuçları",
+    "subtitle": "AI kariyer koçumuza iş arama hakkında soru sorun",
+    "placeholder": "Kariyeriniz hakkında soru sorun...",
+    "quickPrompts": {
+      "salary": "Maaş nasıl pazarlık edilir?",
+      "coverLetter": "Ön yazı yazmama yardım et",
+      "linkedin": "LinkedIn profilimi nasıl geliştirebilirim?",
+      "findJobs": "Yeni bir ülkede nasıl iş bulurum?",
+      "ats": "ATS nedir ve nasıl geçilir?"
+    }
+  },
+  "common": {
+    "send": "Gönder",
+    "loading": "Düşünüyorum...",
+    "error": "Bir hata oluştu. Lütfen tekrar deneyin.",
+    "rateLimit": "Çok fazla istek. Lütfen bekleyin.",
+    "creditsExhausted": "AI kredileri tükendi. Daha sonra tekrar deneyin."
+  }
+}
