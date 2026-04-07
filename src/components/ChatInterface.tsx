@@ -34,9 +34,46 @@ const ChatInterface = ({
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const hasSentInitialRef = useRef(false);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Auto-send initial messages on mount
+  useEffect(() => {
+    if (hasSentInitialRef.current) return;
+    if (initialMessages.length > 0) {
+      hasSentInitialRef.current = true;
+      const lastUserMsg = initialMessages.filter((m) => m.role === 'user').pop();
+      if (lastUserMsg) {
+        setIsLoading(true);
+        let assistantSoFar = '';
+        const upsertAssistant = (chunk: string) => {
+          assistantSoFar += chunk;
+          setMessages((prev) => {
+            const last = prev[prev.length - 1];
+            if (last?.role === 'assistant') {
+              return prev.map((m, idx) => (idx === prev.length - 1 ? { ...m, content: assistantSoFar } : m));
+            }
+            return [...prev, { role: 'assistant', content: assistantSoFar }];
+          });
+        };
+        streamChat({
+          messages: initialMessages,
+          type,
+          language: i18n.language?.split('-')[0] || 'en',
+          context,
+          onDelta: upsertAssistant,
+          onDone: () => setIsLoading(false),
+          onError: (errorType) => {
+            setIsLoading(false);
+            toast({ title: t(`common.${errorType}`), variant: 'destructive' });
+          },
+        });
+      }
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const send = async (text: string) => {
     if (!text.trim() || isLoading) return;
