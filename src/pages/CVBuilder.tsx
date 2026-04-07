@@ -7,7 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Download, Plus, Trash2, Sparkles, Pencil, Upload } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Loader2, Download, Plus, Trash2, Sparkles, Pencil, Upload, ChevronDown, Check } from 'lucide-react';
 import { streamChat } from '@/lib/chat';
 import { useToast } from '@/hooks/use-toast';
 import type { CvFormExtraction } from '@/lib/cvFormTypes';
@@ -30,13 +31,23 @@ interface Education {
 }
 
 const MAX_CV_UPLOAD_BYTES = 512 * 1024;
-/** PDFs are larger; text is extracted client-side only */
 const MAX_PDF_BYTES = 3 * 1024 * 1024;
 
 const CVBuilder = () => {
   const { t, i18n } = useTranslation();
   const { toast } = useToast();
-  const [step, setStep] = useState(0);
+
+  // Section open states — all open by default
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
+    personal: true,
+    skills: true,
+    experience: true,
+    education: true,
+    generate: true,
+  });
+
+  const toggleSection = (key: string) =>
+    setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -53,6 +64,7 @@ const CVBuilder = () => {
   const [cvOutput, setCvOutput] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const [uploadedCvText, setUploadedCvText] = useState('');
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
@@ -60,12 +72,7 @@ const CVBuilder = () => {
   const [isStructuringCv, setIsStructuringCv] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pdfParseLockRef = useRef(false);
-  /** Bumped on clear or new upload so in-flight `finishLoad` does not overwrite state after removal. */
   const uploadGenerationRef = useRef(0);
-
-  const steps = [
-    t('cv.step1'), t('cv.step2'), t('cv.step3'), t('cv.step4'), t('cv.step5'),
-  ];
 
   const addExperience = () => setExperiences([...experiences, { jobTitle: '', company: '', duration: '', description: '' }]);
   const removeExperience = (i: number) => setExperiences(experiences.filter((_, idx) => idx !== i));
@@ -156,7 +163,7 @@ Use this as primary content when the form below is incomplete. Prefer the struct
         messages: [
           {
             role: 'user',
-            content: `Extract data from this resume text. The text may be from PDF extraction and noisy.
+            content: `Extract structured data from this resume text. Only extract information that is EXPLICITLY stated in the text. Do NOT infer or guess any fields. If a field is not clearly present, leave it as an empty string.
 
 ---BEGIN---
 ${text.slice(0, 100000)}
@@ -171,22 +178,10 @@ ${text.slice(0, 100000)}
           applyCvFormToState(mergeCvExtractions(heuristic, parsed));
           toast({ title: t('cv.structureDone') });
         } else {
-          const hasContact =
-            !!heuristicForm.email?.trim() ||
-            !!heuristicForm.phone?.trim() ||
-            !!heuristicForm.linkedin?.trim() ||
-            !!heuristicForm.github?.trim();
-          if (hasContact) {
-            toast({
-              title: t('cv.structureHeuristicOnly'),
-              description: t('cv.structureHeuristicOnlyHint'),
-            });
-          } else {
-            toast({
-              title: t('cv.structurePartial'),
-              description: t('cv.structurePartialHint'),
-            });
-          }
+          toast({
+            title: t('cv.structurePartial'),
+            description: t('cv.structurePartialHint'),
+          });
         }
       } else {
         toast({ title: t('cv.structureFailed'), variant: 'destructive' });
@@ -204,8 +199,7 @@ ${text.slice(0, 100000)}
   const processUploadedFile = async (file: File) => {
     const lower = file.name.toLowerCase();
     const isPdf = lower.endsWith('.pdf');
-    const isText =
-      lower.endsWith('.txt') || lower.endsWith('.md') || lower.endsWith('.markdown');
+    const isText = lower.endsWith('.txt') || lower.endsWith('.md') || lower.endsWith('.markdown');
 
     if (!isPdf && !isText) {
       toast({ title: t('cv.uploadBadType'), variant: 'destructive' });
@@ -255,8 +249,6 @@ ${text.slice(0, 100000)}
     setUploadedCvText('');
     setUploadedFileName(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
-    const step4 = document.getElementById('cv-upload-step4') as HTMLInputElement | null;
-    if (step4) step4.value = '';
   };
 
   const onFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -274,6 +266,7 @@ ${text.slice(0, 100000)}
 
   const generateCV = async () => {
     setIsGenerating(true);
+    setShowPreview(true);
     const userInfo = buildUserInfo();
 
     const instruction = `Please create a professional, ATS-optimized CV in markdown with this information:
@@ -297,7 +290,6 @@ STRICT RULES:
       },
       onDone: () => {
         setIsGenerating(false);
-        setStep(5);
       },
       onError: (errorType) => {
         setIsGenerating(false);
@@ -352,8 +344,8 @@ ${cvOutput}
   };
 
   const startOver = () => {
-    setStep(0);
     setCvOutput('');
+    setShowPreview(false);
     setName('');
     setEmail('');
     setPhone('');
@@ -368,7 +360,40 @@ ${cvOutput}
     clearUpload();
   };
 
-  const canProceedStep0 = name.trim().length > 0 || uploadedCvText.trim().length > 0;
+  const sectionHasContent = (key: string): boolean => {
+    switch (key) {
+      case 'personal':
+        return !!(name || email || phone || location || linkedin || github || languages);
+      case 'skills':
+        return !!skills.trim();
+      case 'experience':
+        return experiences.some((e) => e.jobTitle || e.company);
+      case 'education':
+        return educations.some((e) => e.degree || e.school);
+      case 'generate':
+        return !!targetRole.trim();
+      default:
+        return false;
+    }
+  };
+
+  const SectionHeader = ({ sectionKey, number, title }: { sectionKey: string; number: number; title: string }) => (
+    <CollapsibleTrigger className="flex items-center gap-3 w-full py-3 px-4 rounded-lg hover:bg-muted/50 transition-colors text-left">
+      <div
+        className={`flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold shrink-0 ${
+          sectionHasContent(sectionKey) ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+        }`}
+      >
+        {sectionHasContent(sectionKey) ? <Check className="h-3.5 w-3.5" /> : number}
+      </div>
+      <span className="font-semibold text-foreground flex-1">{title}</span>
+      <ChevronDown
+        className={`h-4 w-4 text-muted-foreground transition-transform ${
+          openSections[sectionKey] ? 'rotate-180' : ''
+        }`}
+      />
+    </CollapsibleTrigger>
+  );
 
   return (
     <Layout>
@@ -376,205 +401,45 @@ ${cvOutput}
         <h1 className="text-2xl font-bold text-foreground font-['Nunito'] mb-1">{t('cv.title')}</h1>
         <p className="text-sm text-muted-foreground mb-6">{t('cv.subtitle')}</p>
 
-        {step < 5 && (
-          <div className="flex items-center gap-1 mb-8 overflow-x-auto">
-            {steps.map((label, i) => (
-              <div
-                key={i}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap ${
-                  i === step ? 'bg-primary text-primary-foreground' :
-                  i < step ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
-                }`}
-              >
-                {i + 1}. {label}
+        {/* Upload area */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".txt,.md,.markdown,.pdf,text/plain,text/markdown,application/pdf"
+          className="sr-only"
+          aria-label={t('cv.uploadButton')}
+          onChange={onFileInputChange}
+          disabled={isParsingPdf}
+        />
+        <Card
+          className="border-dashed border-2 bg-muted/30 mb-6"
+          onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+          onDrop={onDropUpload}
+        >
+          <CardContent className="p-4 sm:p-6 space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg bg-primary/10 p-2 text-primary shrink-0">
+                <Upload className="h-5 w-5" />
               </div>
-            ))}
-          </div>
-        )}
-
-        {step === 0 && (
-          <div className="space-y-4">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".txt,.md,.markdown,.pdf,text/plain,text/markdown,application/pdf"
-              className="sr-only"
-              aria-label={t('cv.uploadButton')}
-              onChange={onFileInputChange}
-              disabled={isParsingPdf}
-            />
-            <Card
-              className="border-dashed border-2 bg-muted/30"
-              onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
-              onDrop={onDropUpload}
-            >
-              <CardContent className="p-4 sm:p-6 space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="rounded-lg bg-primary/10 p-2 text-primary shrink-0">
-                    <Upload className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <p className="font-medium text-foreground">{t('cv.uploadTitle')}</p>
-                    <p className="text-sm text-muted-foreground">{t('cv.uploadHint')}</p>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-2 items-center">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    disabled={isParsingPdf}
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    {isParsingPdf ? (
-                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t('cv.uploadPdfParsing')}</>
-                    ) : isStructuringCv ? (
-                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t('cv.structuringFields')}</>
-                    ) : (
-                      <><Upload className="h-4 w-4 mr-2" /> {t('cv.uploadButton')}</>
-                    )}
-                  </Button>
-                  {uploadedFileName && (
-                    <Button type="button" variant="ghost" size="sm" onClick={clearUpload} disabled={isParsingPdf}>
-                      {t('cv.uploadClear')}
-                    </Button>
-                  )}
-                </div>
-                {uploadedFileName && (
-                  <p className="text-sm text-muted-foreground">
-                    <span className="font-medium text-foreground">{uploadedFileName}</span>
-                    {' · '}
-                    {uploadedCvText.length.toLocaleString()} {t('cv.uploadChars')}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-
-            <Input placeholder={t('cv.name')} value={name} onChange={e => setName(e.target.value)} />
-            <Input placeholder={t('cv.email')} value={email} onChange={e => setEmail(e.target.value)} type="email" />
-            <Input placeholder={t('cv.phone')} value={phone} onChange={e => setPhone(e.target.value)} />
-            <Input placeholder={t('cv.location')} value={location} onChange={e => setLocation(e.target.value)} />
-            <Input placeholder={t('cv.linkedin')} value={linkedin} onChange={e => setLinkedin(e.target.value)} />
-            <Input placeholder={t('cv.github')} value={github} onChange={e => setGithub(e.target.value)} />
-            <Textarea
-              placeholder={t('cv.languagesPlaceholder')}
-              value={languages}
-              onChange={e => setLanguages(e.target.value)}
-              rows={2}
-            />
-            <Button onClick={() => setStep(1)} disabled={!canProceedStep0} className="w-full">{t('cv.next')}</Button>
-          </div>
-        )}
-
-        {step === 1 && (
-          <div className="space-y-4">
-            <label className="text-sm font-medium text-foreground">{t('cv.skills')}</label>
-            <Textarea
-              value={skills}
-              onChange={e => setSkills(e.target.value)}
-              placeholder={t('cv.skillsPlaceholder')}
-              rows={6}
-            />
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setStep(0)} className="flex-1">{t('cv.back')}</Button>
-              <Button onClick={() => setStep(2)} className="flex-1">{t('cv.next')}</Button>
+              <div className="min-w-0 flex-1 space-y-1">
+                <p className="font-medium text-foreground">{t('cv.uploadTitle')}</p>
+                <p className="text-sm text-muted-foreground">{t('cv.uploadHint')}</p>
+              </div>
             </div>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="space-y-4">
-            {experiences.map((exp, i) => (
-              <Card key={i}>
-                <CardContent className="p-4 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">#{i + 1}</span>
-                    {experiences.length > 1 && (
-                      <button type="button" onClick={() => removeExperience(i)} className="text-destructive hover:opacity-70">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                  <Input placeholder={t('cv.jobTitle')} value={exp.jobTitle} onChange={e => updateExperience(i, 'jobTitle', e.target.value)} />
-                  <Input placeholder={t('cv.company')} value={exp.company} onChange={e => updateExperience(i, 'company', e.target.value)} />
-                  <Input placeholder={t('cv.duration')} value={exp.duration} onChange={e => updateExperience(i, 'duration', e.target.value)} />
-                  <Textarea placeholder={t('cv.description')} value={exp.description} onChange={e => updateExperience(i, 'description', e.target.value)} rows={3} />
-                </CardContent>
-              </Card>
-            ))}
-            <button type="button" onClick={addExperience} className="text-sm text-primary hover:underline flex items-center gap-1">
-              <Plus className="h-4 w-4" /> {t('cv.addExperience')}
-            </button>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setStep(1)} className="flex-1">{t('cv.back')}</Button>
-              <Button onClick={() => setStep(3)} className="flex-1">{t('cv.next')}</Button>
-            </div>
-          </div>
-        )}
-
-        {step === 3 && (
-          <div className="space-y-4">
-            {educations.map((edu, i) => (
-              <Card key={i}>
-                <CardContent className="p-4 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">#{i + 1}</span>
-                    {educations.length > 1 && (
-                      <button type="button" onClick={() => removeEducation(i)} className="text-destructive hover:opacity-70">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                  <Input placeholder={t('cv.degree')} value={edu.degree} onChange={e => updateEducation(i, 'degree', e.target.value)} />
-                  <Input placeholder={t('cv.school')} value={edu.school} onChange={e => updateEducation(i, 'school', e.target.value)} />
-                  <Input placeholder={t('cv.year')} value={edu.year} onChange={e => updateEducation(i, 'year', e.target.value)} />
-                </CardContent>
-              </Card>
-            ))}
-            <button type="button" onClick={addEducation} className="text-sm text-primary hover:underline flex items-center gap-1">
-              <Plus className="h-4 w-4" /> {t('cv.addEducation')}
-            </button>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setStep(2)} className="flex-1">{t('cv.back')}</Button>
-              <Button onClick={() => setStep(4)} className="flex-1">{t('cv.next')}</Button>
-            </div>
-          </div>
-        )}
-
-        {step === 4 && (
-          <div className="space-y-4">
-            {uploadedFileName && (
-              <p className="text-sm rounded-lg border border-border bg-muted/40 px-3 py-2 text-muted-foreground">
-                {t('cv.uploadAttached')}: <span className="font-medium text-foreground">{uploadedFileName}</span>
-              </p>
-            )}
-            <label className="text-sm font-medium text-foreground">{t('cv.targetRole')}</label>
-            <Input
-              value={targetRole}
-              onChange={e => setTargetRole(e.target.value)}
-              placeholder={t('cv.targetPlaceholder')}
-            />
-            <div className="flex flex-wrap items-center gap-2">
-              <input
-                type="file"
-                accept=".txt,.md,.markdown,.pdf,text/plain,text/markdown,application/pdf"
-                className="sr-only"
-                id="cv-upload-step4"
-                aria-label={t('cv.uploadButton')}
-                onChange={onFileInputChange}
-                disabled={isParsingPdf}
-              />
+            <div className="flex flex-wrap gap-2 items-center">
               <Button
                 type="button"
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 disabled={isParsingPdf}
-                onClick={() => document.getElementById('cv-upload-step4')?.click()}
+                onClick={() => fileInputRef.current?.click()}
               >
                 {isParsingPdf ? (
                   <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t('cv.uploadPdfParsing')}</>
+                ) : isStructuringCv ? (
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t('cv.structuringFields')}</>
                 ) : (
-                  <><Upload className="h-4 w-4 mr-2" /> {uploadedFileName ? t('cv.uploadReplace') : t('cv.uploadButton')}</>
+                  <><Upload className="h-4 w-4 mr-2" /> {t('cv.uploadButton')}</>
                 )}
               </Button>
               {uploadedFileName && (
@@ -583,22 +448,149 @@ ${cvOutput}
                 </Button>
               )}
             </div>
-            <p className="text-xs text-muted-foreground">{t('cv.regenerateHint')}</p>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button variant="outline" onClick={() => setStep(3)} className="flex-1">{t('cv.back')}</Button>
-              <Button onClick={generateCV} disabled={isGenerating} className="flex-1">
-                {isGenerating ? (
-                  <><Loader2 className="h-4 w-4 animate-spin mr-2" /> {t('cv.generating')}</>
-                ) : (
-                  cvOutput ? t('cv.regenerate') : t('cv.generate')
-                )}
-              </Button>
-            </div>
-          </div>
-        )}
+            {uploadedFileName && (
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">{uploadedFileName}</span>
+                {' · '}
+                {uploadedCvText.length.toLocaleString()} {t('cv.uploadChars')}
+              </p>
+            )}
+          </CardContent>
+        </Card>
 
-        {step === 5 && cvOutput && (
-          <div className="space-y-4">
+        {/* Vertical collapsible sections */}
+        <div className="space-y-3">
+          {/* Section 1: Personal Info */}
+          <Collapsible open={openSections.personal} onOpenChange={() => toggleSection('personal')}>
+            <Card>
+              <SectionHeader sectionKey="personal" number={1} title={t('cv.step1')} />
+              <CollapsibleContent>
+                <CardContent className="px-4 pb-4 pt-2 space-y-3">
+                  <Input placeholder={t('cv.name')} value={name} onChange={e => setName(e.target.value)} />
+                  <Input placeholder={t('cv.email')} value={email} onChange={e => setEmail(e.target.value)} type="email" />
+                  <Input placeholder={t('cv.phone')} value={phone} onChange={e => setPhone(e.target.value)} />
+                  <Input placeholder={t('cv.location')} value={location} onChange={e => setLocation(e.target.value)} />
+                  <Input placeholder={t('cv.linkedin')} value={linkedin} onChange={e => setLinkedin(e.target.value)} />
+                  <Input placeholder={t('cv.github')} value={github} onChange={e => setGithub(e.target.value)} />
+                  <Textarea
+                    placeholder={t('cv.languagesPlaceholder')}
+                    value={languages}
+                    onChange={e => setLanguages(e.target.value)}
+                    rows={2}
+                  />
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+
+          {/* Section 2: Skills */}
+          <Collapsible open={openSections.skills} onOpenChange={() => toggleSection('skills')}>
+            <Card>
+              <SectionHeader sectionKey="skills" number={2} title={t('cv.step2')} />
+              <CollapsibleContent>
+                <CardContent className="px-4 pb-4 pt-2 space-y-3">
+                  <Textarea
+                    value={skills}
+                    onChange={e => setSkills(e.target.value)}
+                    placeholder={t('cv.skillsPlaceholder')}
+                    rows={5}
+                  />
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+
+          {/* Section 3: Experience */}
+          <Collapsible open={openSections.experience} onOpenChange={() => toggleSection('experience')}>
+            <Card>
+              <SectionHeader sectionKey="experience" number={3} title={t('cv.step3')} />
+              <CollapsibleContent>
+                <CardContent className="px-4 pb-4 pt-2 space-y-3">
+                  {experiences.map((exp, i) => (
+                    <Card key={i} className="border-border/50">
+                      <CardContent className="p-3 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-medium text-muted-foreground">#{i + 1}</span>
+                          {experiences.length > 1 && (
+                            <button type="button" onClick={() => removeExperience(i)} className="text-destructive hover:opacity-70">
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                        <Input placeholder={t('cv.jobTitle')} value={exp.jobTitle} onChange={e => updateExperience(i, 'jobTitle', e.target.value)} />
+                        <Input placeholder={t('cv.company')} value={exp.company} onChange={e => updateExperience(i, 'company', e.target.value)} />
+                        <Input placeholder={t('cv.duration')} value={exp.duration} onChange={e => updateExperience(i, 'duration', e.target.value)} />
+                        <Textarea placeholder={t('cv.description')} value={exp.description} onChange={e => updateExperience(i, 'description', e.target.value)} rows={2} />
+                      </CardContent>
+                    </Card>
+                  ))}
+                  <button type="button" onClick={addExperience} className="text-sm text-primary hover:underline flex items-center gap-1">
+                    <Plus className="h-4 w-4" /> {t('cv.addExperience')}
+                  </button>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+
+          {/* Section 4: Education */}
+          <Collapsible open={openSections.education} onOpenChange={() => toggleSection('education')}>
+            <Card>
+              <SectionHeader sectionKey="education" number={4} title={t('cv.step4')} />
+              <CollapsibleContent>
+                <CardContent className="px-4 pb-4 pt-2 space-y-3">
+                  {educations.map((edu, i) => (
+                    <Card key={i} className="border-border/50">
+                      <CardContent className="p-3 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-medium text-muted-foreground">#{i + 1}</span>
+                          {educations.length > 1 && (
+                            <button type="button" onClick={() => removeEducation(i)} className="text-destructive hover:opacity-70">
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                        <Input placeholder={t('cv.degree')} value={edu.degree} onChange={e => updateEducation(i, 'degree', e.target.value)} />
+                        <Input placeholder={t('cv.school')} value={edu.school} onChange={e => updateEducation(i, 'school', e.target.value)} />
+                        <Input placeholder={t('cv.year')} value={edu.year} onChange={e => updateEducation(i, 'year', e.target.value)} />
+                      </CardContent>
+                    </Card>
+                  ))}
+                  <button type="button" onClick={addEducation} className="text-sm text-primary hover:underline flex items-center gap-1">
+                    <Plus className="h-4 w-4" /> {t('cv.addEducation')}
+                  </button>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+
+          {/* Section 5: Target Role & Generate */}
+          <Collapsible open={openSections.generate} onOpenChange={() => toggleSection('generate')}>
+            <Card>
+              <SectionHeader sectionKey="generate" number={5} title={t('cv.step5')} />
+              <CollapsibleContent>
+                <CardContent className="px-4 pb-4 pt-2 space-y-3">
+                  <Input
+                    value={targetRole}
+                    onChange={e => setTargetRole(e.target.value)}
+                    placeholder={t('cv.targetPlaceholder')}
+                  />
+                  <p className="text-xs text-muted-foreground">{t('cv.regenerateHint')}</p>
+                  <Button onClick={generateCV} disabled={isGenerating || !name.trim()} className="w-full">
+                    {isGenerating ? (
+                      <><Loader2 className="h-4 w-4 animate-spin mr-2" /> {t('cv.generating')}</>
+                    ) : (
+                      <><Sparkles className="h-4 w-4 mr-2" /> {cvOutput ? t('cv.regenerate') : t('cv.generate')}</>
+                    )}
+                  </Button>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+        </div>
+
+        {/* CV Preview */}
+        {(showPreview && cvOutput) && (
+          <div className="mt-8 space-y-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h2 className="text-lg font-bold font-['Nunito']">{t('cv.preview')}</h2>
@@ -651,26 +643,10 @@ ${cvOutput}
               </TabsContent>
             </Tabs>
 
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button variant="outline" onClick={() => setStep(0)} className="flex-1" type="button">
-                {t('cv.editQuestionnaire')}
-              </Button>
-              <Button variant="outline" onClick={() => setStep(4)} className="flex-1" type="button">
-                {t('cv.backToTargetRole')}
-              </Button>
-            </div>
             <Button variant="ghost" onClick={startOver} className="w-full text-muted-foreground" type="button">
               {t('cv.startOver')}
             </Button>
           </div>
-        )}
-
-        {isGenerating && cvOutput && step === 4 && (
-          <Card className="mt-6">
-            <CardContent className="p-6 prose prose-sm max-w-none dark:prose-invert">
-              <ReactMarkdown>{cvOutput}</ReactMarkdown>
-            </CardContent>
-          </Card>
         )}
       </div>
     </Layout>

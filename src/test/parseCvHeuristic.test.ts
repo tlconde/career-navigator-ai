@@ -3,7 +3,7 @@ import { parseCvFromTextHeuristic } from '@/lib/parseCvFromText';
 import { mergeCvExtractions } from '@/lib/cvFormMerge';
 
 describe('parseCvFromTextHeuristic', () => {
-  it('extracts plain-text sections without markdown headings', () => {
+  it('extracts contact info without populating wrong fields', () => {
     const raw = `
 Jane Doe
 jane@example.com | +1 555-123-4567
@@ -35,9 +35,13 @@ MBA, State University
     const h = parseCvFromTextHeuristic(raw, 'Resume_Jane_Doe');
     const m = mergeCvExtractions(h, null);
     expect(m.email).toContain('jane@example.com');
-    expect(m.skills.toLowerCase()).toMatch(/sql|python/);
-    expect(m.experiences.length).toBeGreaterThanOrEqual(1);
-    expect(m.targetRole.length).toBeGreaterThan(0);
+    expect(m.name).toMatch(/Jane Doe/i);
+    // Heuristic should NOT populate skills, experience, education — let AI do it
+    expect(h.skills).toBeUndefined();
+    expect(h.experiences).toBeUndefined();
+    expect(h.educations).toBeUndefined();
+    expect(h.location).toBeUndefined();
+    expect(h.targetRole).toBeUndefined();
   });
 
   it('parses name from Resume_First_Last filename', () => {
