@@ -1,5 +1,6 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link, useLocation as useRouterLocation, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import Layout from '@/components/Layout';
 import { Input } from '@/components/ui/input';
@@ -8,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Loader2, Download, Plus, Trash2, Sparkles, Pencil, Upload, ChevronDown, Check } from 'lucide-react';
+import { Loader2, Download, Trash2, Sparkles, Pencil, Upload, ChevronDown, Check } from 'lucide-react';
 import { streamChat } from '@/lib/chat';
 import { useToast } from '@/hooks/use-toast';
 import type { CvFormExtraction } from '@/lib/cvFormTypes';
@@ -16,6 +17,10 @@ import { mergeCvExtractions } from '@/lib/cvFormMerge';
 import { parseCvExtractionJson } from '@/lib/parseCvJsonResponse';
 import { parseCvFromTextHeuristic } from '@/lib/parseCvFromText';
 import { streamChatToString } from '@/lib/streamChatToString';
+import type { EvaluateHandoff } from '@/lib/evaluateTypes';
+import { formatEvaluationContextForPrompt } from '@/lib/evaluateTypes';
+import { formatCvExtractionForEvaluate, saveCvEvaluatePrefill } from '@/lib/cvEvaluatePrefill';
+import { JobEvalInsightsCard } from '@/components/JobEvalInsightsCard';
 
 interface Experience {
   jobTitle: string;
@@ -33,18 +38,52 @@ interface Education {
 const MAX_CV_UPLOAD_BYTES = 512 * 1024;
 const MAX_PDF_BYTES = 3 * 1024 * 1024;
 
+const EVAL_HANDOFF_STORAGE_KEY = 'careerbridge-eval-handoff-v1';
+
+function readPersistedEvalHandoff(): EvaluateHandoff | null {
+  try {
+    const raw = sessionStorage.getItem(EVAL_HANDOFF_STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as EvaluateHandoff;
+  } catch {
+    return null;
+  }
+}
+
+function persistEvalHandoff(h: EvaluateHandoff) {
+  try {
+    sessionStorage.setItem(EVAL_HANDOFF_STORAGE_KEY, JSON.stringify(h));
+  } catch {
+    /* ignore */
+  }
+}
+
+function clearPersistedEvalHandoff() {
+  try {
+    sessionStorage.removeItem(EVAL_HANDOFF_STORAGE_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Collapsed until a CV file is uploaded — then sections expand so parsed fields are visible. */
+const SECTION_KEYS = ['personal', 'skills', 'experience', 'education', 'generate'] as const;
+
+function collapsedSectionsState(): Record<string, boolean> {
+  return Object.fromEntries(SECTION_KEYS.map((k) => [k, false]));
+}
+
+function expandedSectionsState(): Record<string, boolean> {
+  return Object.fromEntries(SECTION_KEYS.map((k) => [k, true]));
+}
+
 const CVBuilder = () => {
   const { t, i18n } = useTranslation();
   const { toast } = useToast();
+  const routerLocation = useRouterLocation();
+  const navigate = useNavigate();
 
-  // Section open states — all open by default
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-    personal: true,
-    skills: true,
-    experience: true,
-    education: true,
-    generate: true,
-  });
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>(collapsedSectionsState);
 
   const toggleSection = (key: string) =>
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -60,11 +99,13 @@ const CVBuilder = () => {
   const [experiences, setExperiences] = useState<Experience[]>([{ jobTitle: '', company: '', duration: '', description: '' }]);
   const [educations, setEducations] = useState<Education[]>([{ degree: '', school: '', year: '' }]);
   const [targetRole, setTargetRole] = useState('');
+  const [targetRoleSuggestion, setTargetRoleSuggestion] = useState('');
+  const [jobEval, setJobEval] = useState<EvaluateHandoff | null>(null);
 
   const [cvOutput, setCvOutput] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
+  const [currentScreen, setCurrentScreen] = useState<'form' | 'result'>('form');
 
   const [uploadedCvText, setUploadedCvText] = useState('');
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
@@ -73,6 +114,38 @@ const CVBuilder = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pdfParseLockRef = useRef(false);
   const uploadGenerationRef = useRef(0);
+  const evalPersistedLoadedRef = useRef(false);
+
+  useEffect(() => {
+    const state = routerLocation.state as { evaluateHandoff?: EvaluateHandoff } | null;
+    if (state?.evaluateHandoff) {
+      persistEvalHandoff(state.evaluateHandoff);
+      setJobEval(state.evaluateHandoff);
+      navigate(routerLocation.pathname, { replace: true, state: {} });
+      evalPersistedLoadedRef.current = true;
+      toast({ title: t('cv.jobEvalLoaded') });
+      return;
+    }
+    if (!evalPersistedLoadedRef.current) {
+      evalPersistedLoadedRef.current = true;
+      const persisted = readPersistedEvalHandoff();
+      if (persisted) setJobEval(persisted);
+    }
+  }, [routerLocation.state, routerLocation.pathname, navigate, toast, t]);
+
+  useEffect(() => {
+    const r = jobEval?.structured?.roleTitle?.trim();
+    if (r) {
+      setTargetRoleSuggestion((prev) => prev || r);
+    }
+  }, [jobEval]);
+
+  const clearJobEval = () => {
+    setJobEval(null);
+    clearPersistedEvalHandoff();
+  };
+
+  const evaluationPromptBlock = jobEval ? `\n\n${formatEvaluationContextForPrompt(jobEval)}\n` : '';
 
   const addExperience = () => setExperiences([...experiences, { jobTitle: '', company: '', duration: '', description: '' }]);
   const removeExperience = (i: number) => setExperiences(experiences.filter((_, idx) => idx !== i));
@@ -134,7 +207,7 @@ Use this as primary content when the form below is incomplete. Prefer the struct
     setGithub(m.github);
     setLanguages(m.languages);
     setSkills(m.skills);
-    setTargetRole(m.targetRole);
+    if (m.targetRole?.trim()) setTargetRoleSuggestion(m.targetRole.trim());
     const hasExp = m.experiences.some(
       (e) => e.jobTitle.trim() || e.company.trim() || e.duration.trim() || e.description.trim(),
     );
@@ -145,6 +218,7 @@ Use this as primary content when the form below is incomplete. Prefer the struct
 
   const finishLoad = async (text: string, fileName: string) => {
     const gen = ++uploadGenerationRef.current;
+    setOpenSections(expandedSectionsState());
     setUploadedCvText(text);
     setUploadedFileName(fileName);
     const stem = fileName.replace(/\.[^.]+$/, '');
@@ -156,6 +230,7 @@ Use this as primary content when the form below is incomplete. Prefer the struct
     if (gen !== uploadGenerationRef.current) return;
 
     setIsStructuringCv(true);
+    let finalMerged: CvFormExtraction = heuristicForm;
     try {
       const res = await streamChatToString({
         type: 'cvparse',
@@ -175,7 +250,8 @@ ${text.slice(0, 100000)}
       if (res.ok) {
         const parsed = parseCvExtractionJson(res.text);
         if (parsed) {
-          applyCvFormToState(mergeCvExtractions(heuristic, parsed));
+          finalMerged = mergeCvExtractions(heuristic, parsed);
+          applyCvFormToState(finalMerged);
           toast({ title: t('cv.structureDone') });
         } else {
           const hasRichHeuristic =
@@ -203,7 +279,10 @@ ${text.slice(0, 100000)}
         toast({ title: t('cv.structureFailed'), variant: 'destructive' });
       }
     } finally {
-      if (gen === uploadGenerationRef.current) setIsStructuringCv(false);
+      if (gen === uploadGenerationRef.current) {
+        setIsStructuringCv(false);
+        saveCvEvaluatePrefill(formatCvExtractionForEvaluate(finalMerged));
+      }
     }
   };
 
@@ -259,6 +338,7 @@ ${text.slice(0, 100000)}
     setIsStructuringCv(false);
     setUploadedCvText('');
     setUploadedFileName(null);
+    setOpenSections(collapsedSectionsState());
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -277,13 +357,14 @@ ${text.slice(0, 100000)}
 
   const generateCV = async () => {
     setIsGenerating(true);
-    setShowPreview(true);
+    setCurrentScreen('result');
     const userInfo = buildUserInfo();
 
     const instruction = `Please create a professional, ATS-optimized CV in markdown with this information:
 
 ${userInfo}
 ${uploadBlock}
+${evaluationPromptBlock}
 STRICT RULES:
 - Use ONLY the contact details given above. Do NOT output placeholders like [Phone Number], [Email Address], [LinkedIn URL], or similar — write the real values or leave that part out.
 - If LinkedIn or GitHub are "(not provided)", omit those links entirely.
@@ -320,7 +401,7 @@ TASK: Output ONLY the full updated CV as markdown. Merge all useful recommendati
 - Integrate concrete content from any "ATS Optimization", "Professional Advice", or similar sections into the right CV sections, then remove those meta sections OR reduce them to a 2-line optional note at the end.
 - Keep real contact details only — never use bracket placeholders.
 - If a Languages section was recommended and user data supports it, add it.
-
+${evaluationPromptBlock ? `\nWhen revising, apply these job-specific insights:\n${evaluationPromptBlock}\n` : ''}
 --- CV to revise ---
 ${cvOutput}
 --- END ---`;
@@ -356,7 +437,7 @@ ${cvOutput}
 
   const startOver = () => {
     setCvOutput('');
-    setShowPreview(false);
+    setCurrentScreen('form');
     setName('');
     setEmail('');
     setPhone('');
@@ -368,7 +449,9 @@ ${cvOutput}
     setExperiences([{ jobTitle: '', company: '', duration: '', description: '' }]);
     setEducations([{ degree: '', school: '', year: '' }]);
     setTargetRole('');
+    setTargetRoleSuggestion('');
     clearUpload();
+    clearJobEval();
   };
 
   const sectionHasContent = (key: string): boolean => {
@@ -409,68 +492,82 @@ ${cvOutput}
   return (
     <Layout>
       <div className="max-w-3xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-foreground font-['Nunito'] mb-1">{t('cv.title')}</h1>
-        <p className="text-sm text-muted-foreground mb-6">{t('cv.subtitle')}</p>
+        {currentScreen === 'form' ? (
+          <>
+            <h1 className="text-2xl font-bold text-foreground font-['Nunito'] mb-1">{t('cv.title')}</h1>
+            <p className="text-sm text-muted-foreground mb-2">{t('cv.subtitle')}</p>
+            <p className="text-sm mb-6">
+              <Link to="/evaluate" state={{ evaluatePrefillSkills: buildUserInfo() }} className="text-primary hover:underline font-medium">
+                {t('cv.openJobEvaluate')}
+              </Link>
+              <span className="text-muted-foreground"> — {t('cv.openJobEvaluateHint')}</span>
+            </p>
 
-        {/* Upload area */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".txt,.md,.markdown,.pdf,text/plain,text/markdown,application/pdf"
-          className="sr-only"
-          aria-label={t('cv.uploadButton')}
-          onChange={onFileInputChange}
-          disabled={isParsingPdf}
-        />
-        <Card
-          className="border-dashed border-2 bg-muted/30 mb-6"
-          onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
-          onDrop={onDropUpload}
-        >
-          <CardContent className="p-4 sm:p-6 space-y-3">
-            <div className="flex items-start gap-3">
-              <div className="rounded-lg bg-primary/10 p-2 text-primary shrink-0">
-                <Upload className="h-5 w-5" />
-              </div>
-              <div className="min-w-0 flex-1 space-y-1">
-                <p className="font-medium text-foreground">{t('cv.uploadTitle')}</p>
-                <p className="text-sm text-muted-foreground">{t('cv.uploadHint')}</p>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2 items-center">
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                disabled={isParsingPdf}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                {isParsingPdf ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t('cv.uploadPdfParsing')}</>
-                ) : isStructuringCv ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t('cv.structuringFields')}</>
-                ) : (
-                  <><Upload className="h-4 w-4 mr-2" /> {t('cv.uploadButton')}</>
+            {/* Upload area */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".txt,.md,.markdown,.pdf,text/plain,text/markdown,application/pdf"
+              className="sr-only"
+              aria-label={t('cv.uploadButton')}
+              onChange={onFileInputChange}
+              disabled={isParsingPdf}
+            />
+            <Card
+              className="border-dashed border-2 bg-muted/30 mb-6"
+              onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              onDrop={onDropUpload}
+            >
+              <CardContent className="p-4 sm:p-6 space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-lg bg-primary/10 p-2 text-primary shrink-0">
+                    <Upload className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <p className="font-medium text-foreground">{t('cv.uploadTitle')}</p>
+                    <p className="text-sm text-muted-foreground">{t('cv.uploadHint')}</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2 items-center">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    disabled={isParsingPdf}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {isParsingPdf ? (
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t('cv.uploadPdfParsing')}</>
+                    ) : isStructuringCv ? (
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t('cv.structuringFields')}</>
+                    ) : (
+                      <><Upload className="h-4 w-4 mr-2" /> {t('cv.uploadButton')}</>
+                    )}
+                  </Button>
+                  {uploadedFileName && (
+                    <Button type="button" variant="ghost" size="sm" onClick={clearUpload} disabled={isParsingPdf}>
+                      {t('cv.uploadClear')}
+                    </Button>
+                  )}
+                </div>
+                {uploadedFileName && (
+                  <p className="text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">{uploadedFileName}</span>
+                    {' · '}
+                    {uploadedCvText.length.toLocaleString()} {t('cv.uploadChars')}
+                  </p>
                 )}
-              </Button>
-              {uploadedFileName && (
-                <Button type="button" variant="ghost" size="sm" onClick={clearUpload} disabled={isParsingPdf}>
-                  {t('cv.uploadClear')}
-                </Button>
-              )}
-            </div>
-            {uploadedFileName && (
-              <p className="text-sm text-muted-foreground">
-                <span className="font-medium text-foreground">{uploadedFileName}</span>
-                {' · '}
-                {uploadedCvText.length.toLocaleString()} {t('cv.uploadChars')}
-              </p>
-            )}
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
 
-        {/* Vertical collapsible sections */}
-        <div className="space-y-3">
+            {jobEval && (
+              <div className="mb-6">
+                <JobEvalInsightsCard jobEval={jobEval} onDismiss={clearJobEval} variant="form" />
+              </div>
+            )}
+
+            {/* Vertical collapsible sections */}
+            <div className="space-y-3">
           {/* Section 1: Personal Info */}
           <Collapsible open={openSections.personal} onOpenChange={() => toggleSection('personal')}>
             <Card>
@@ -536,7 +633,7 @@ ${cvOutput}
                     </Card>
                   ))}
                   <button type="button" onClick={addExperience} className="text-sm text-primary hover:underline flex items-center gap-1">
-                    <Plus className="h-4 w-4" /> {t('cv.addExperience')}
+                    {t('cv.addExperience')}
                   </button>
                 </CardContent>
               </CollapsibleContent>
@@ -567,7 +664,7 @@ ${cvOutput}
                     </Card>
                   ))}
                   <button type="button" onClick={addEducation} className="text-sm text-primary hover:underline flex items-center gap-1">
-                    <Plus className="h-4 w-4" /> {t('cv.addEducation')}
+                    {t('cv.addEducation')}
                   </button>
                 </CardContent>
               </CollapsibleContent>
@@ -583,8 +680,17 @@ ${cvOutput}
                   <Input
                     value={targetRole}
                     onChange={e => setTargetRole(e.target.value)}
-                    placeholder={t('cv.targetPlaceholder')}
+                    placeholder={
+                      targetRoleSuggestion
+                        ? `${t('cv.targetPlaceholder')} (${targetRoleSuggestion})`
+                        : t('cv.targetPlaceholder')
+                    }
                   />
+                  {targetRoleSuggestion && !targetRole.trim() && (
+                    <p className="text-xs text-muted-foreground">
+                      Suggested from your current CV role: <span className="font-medium">{targetRoleSuggestion}</span>. Update this to the next role you want.
+                    </p>
+                  )}
                   <p className="text-xs text-muted-foreground">{t('cv.regenerateHint')}</p>
                   <Button onClick={generateCV} disabled={isGenerating || !name.trim()} className="w-full">
                     {isGenerating ? (
@@ -597,11 +703,13 @@ ${cvOutput}
               </CollapsibleContent>
             </Card>
           </Collapsible>
-        </div>
-
-        {/* CV Preview */}
-        {(showPreview && cvOutput) && (
+            </div>
+          </>
+        ) : (
           <div className="mt-8 space-y-4">
+            {jobEval && (
+              <JobEvalInsightsCard jobEval={jobEval} onDismiss={clearJobEval} variant="preview" />
+            )}
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h2 className="text-lg font-bold font-['Nunito']">{t('cv.preview')}</h2>
@@ -654,9 +762,19 @@ ${cvOutput}
               </TabsContent>
             </Tabs>
 
-            <Button variant="ghost" onClick={startOver} className="w-full text-muted-foreground" type="button">
-              {t('cv.startOver')}
-            </Button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setCurrentScreen('form')}
+                className="w-full"
+                type="button"
+              >
+                {t('cv.editQuestionnaire')}
+              </Button>
+              <Button variant="ghost" onClick={startOver} className="w-full text-muted-foreground" type="button">
+                {t('cv.startOver')}
+              </Button>
+            </div>
           </div>
         )}
       </div>

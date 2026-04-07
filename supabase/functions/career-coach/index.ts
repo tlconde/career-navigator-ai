@@ -87,6 +87,35 @@ IMPORTANT: Match the CV's language for free-text fields when appropriate.`,
 Use simple language. Be warm and encouraging.
 IMPORTANT: Respond in the same language the user writes in.`,
 
+  evaluate_structured: `You extract machine-readable job evaluation data for tailoring a CV to a specific posting. Output ONLY a single valid JSON object. No markdown code fences, no explanation, no text before or after the JSON.
+
+Strict JSON: double quotes for keys and strings; no trailing commas.
+
+Required shape (use "" for unknown strings, [] for empty arrays):
+{
+  "roleTitle": string,
+  "matchGrade": string,
+  "mustHaveKeywords": string[],
+  "recommendedKeywords": string[],
+  "missingAreas": string[],
+  "prioritySkillsToAdd": string[],
+  "cvBulletImprovements": string[],
+  "atsNotes": string[]
+}
+
+Guidelines:
+- roleTitle: inferred job title from the job description.
+- matchGrade: short grade (e.g. "B+", "A") plus a brief friendly rationale in the same string.
+- mustHaveKeywords: ATS-relevant terms clearly required or repeated in the JD.
+- recommendedKeywords: strong secondary keywords to weave in naturally.
+- missingAreas: honest gaps vs the role (be kind; transferable skills count).
+- prioritySkillsToAdd: what to emphasize on the CV for this posting.
+- cvBulletImprovements: 3–8 concrete bullet rewrite ideas (not full CV text).
+- atsNotes: 2–5 ATS or section-structure tips.
+
+Do not invent employers, degrees, or credentials the user did not mention.
+IMPORTANT: Use the same language as the job description and candidate background for all string content.`,
+
   tips: `You are a warm, knowledgeable career coach helping job seekers — many of whom are refugees or newcomers.
 
 Your knowledge areas:

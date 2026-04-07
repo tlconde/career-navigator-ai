@@ -4,6 +4,7 @@ export const CHAT_COACH_TYPES = [
   'cv',
   'cvparse',
   'evaluate',
+  'evaluate_structured',
   'tips',
   'scan',
   'batch',
