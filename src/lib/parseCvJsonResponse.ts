@@ -1,3 +1,4 @@
+import { jsonrepair } from 'jsonrepair';
 import type { CvFormExtraction, EducationRow, ExperienceRow } from '@/lib/cvFormTypes';
 import { emptyCvForm } from '@/lib/cvFormTypes';
 
@@ -76,7 +77,15 @@ function tryParseJsonObject(slice: string): unknown | null {
   try {
     return JSON.parse(trimmed);
   } catch {
-    return null;
+    // jsonrepair on prose ("Here is the JSON: ...") can produce a parseable but wrong value — only repair JSON-like slices.
+    if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) {
+      return null;
+    }
+    try {
+      return JSON.parse(jsonrepair(trimmed));
+    } catch {
+      return null;
+    }
   }
 }
 

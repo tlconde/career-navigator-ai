@@ -163,7 +163,7 @@ Use this as primary content when the form below is incomplete. Prefer the struct
         messages: [
           {
             role: 'user',
-            content: `Extract structured data from this resume text. Only extract information that is EXPLICITLY stated in the text. Do NOT infer or guess any fields. If a field is not clearly present, leave it as an empty string.
+            content: `Extract structured data from this resume or CV. Map every job, school, skill block, and language list you can find into the JSON fields. Use empty strings only when a field is truly absent.
 
 ---BEGIN---
 ${text.slice(0, 100000)}
@@ -178,10 +178,21 @@ ${text.slice(0, 100000)}
           applyCvFormToState(mergeCvExtractions(heuristic, parsed));
           toast({ title: t('cv.structureDone') });
         } else {
-          toast({
-            title: t('cv.structurePartial'),
-            description: t('cv.structurePartialHint'),
-          });
+          const hasRichHeuristic =
+            !!heuristicForm.skills?.trim() ||
+            heuristicForm.experiences?.some((e) => e.jobTitle || e.company || e.description) ||
+            heuristicForm.educations?.some((e) => e.degree || e.school);
+          if (hasRichHeuristic) {
+            toast({
+              title: t('cv.structureHeuristicOnly'),
+              description: t('cv.structureHeuristicOnlyHint'),
+            });
+          } else {
+            toast({
+              title: t('cv.structurePartial'),
+              description: t('cv.structurePartialHint'),
+            });
+          }
         }
       } else {
         toast({ title: t('cv.structureFailed'), variant: 'destructive' });
