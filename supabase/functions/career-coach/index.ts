@@ -35,6 +35,7 @@ Output in clean markdown. Use **bold** for name and section headers. Bullet poin
 Don't invent information — only polish what the user provides. Focus on transferable skills.
 Never output generic placeholders like [Phone Number], [Email Address], or [LinkedIn URL] — use the exact values the user supplied, or omit that line entirely.
 If the user provides LinkedIn, GitHub, or languages, include them in the header or a dedicated section — do not leave them as bracket templates.
+Never append a horizontal rule (---), "Note:", or any meta commentary after the CV. The response must end with the last real resume section (e.g. Education or Skills) — no footers about optimization, target role fit, or EU AI Act disclaimers.
 IMPORTANT: Respond in the same language the user writes in.`,
 
   cvparse: `You extract structured data from resume or CV plain text. The text may be noisy (e.g. from PDF extraction).

@@ -125,12 +125,13 @@ const ChatInterface = ({
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && quickPrompts && quickPrompts.length > 0 && (
-          <div className="flex flex-wrap gap-2 justify-center pt-8">
+          <div className="flex flex-wrap gap-2 justify-start pt-4 md:pt-6">
             {quickPrompts.map((qp, i) => (
               <button
                 key={i}
+                type="button"
                 onClick={() => send(qp.message)}
-                className="px-4 py-2 rounded-full bg-muted text-sm text-foreground hover:bg-primary hover:text-primary-foreground transition-colors border border-border"
+                className="rounded-md border border-border/90 bg-background px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-muted/60 hover:border-border"
               >
                 {qp.label}
               </button>
@@ -144,14 +145,14 @@ const ChatInterface = ({
             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[85%] md:max-w-[70%] rounded-2xl px-4 py-3 ${
+              className={`max-w-[85%] md:max-w-[70%] rounded-xl px-4 py-3 ${
                 msg.role === 'user'
-                  ? 'bg-primary text-primary-foreground rounded-br-sm'
-                  : 'bg-card border border-border rounded-bl-sm'
+                  ? 'bg-muted/90 text-foreground border border-border/80 rounded-br-md'
+                  : 'bg-card border border-border/80 rounded-bl-md shadow-none'
               }`}
             >
               {msg.role === 'assistant' ? (
-                <div className="prose prose-sm max-w-none dark:prose-invert [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                <div className="prose prose-sm max-w-none text-foreground prose-headings:font-heading [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
                   <ReactMarkdown>{msg.content}</ReactMarkdown>
                 </div>
               ) : (
@@ -163,7 +164,7 @@ const ChatInterface = ({
 
         {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
           <div className="flex justify-start">
-            <div className="bg-card border border-border rounded-2xl rounded-bl-sm px-4 py-3">
+            <div className="rounded-xl rounded-bl-md border border-border/80 bg-card px-4 py-3">
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             </div>
           </div>
@@ -173,7 +174,7 @@ const ChatInterface = ({
       </div>
 
       {/* Input */}
-      <div className="border-t border-border bg-card/50 p-4">
+      <div className="border-t border-border/80 bg-background p-4">
         <div className="max-w-3xl mx-auto flex gap-2">
           <Textarea
             ref={textareaRef}

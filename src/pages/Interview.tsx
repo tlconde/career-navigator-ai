@@ -23,16 +23,16 @@ const Interview = () => {
 
   return (
     <Layout>
-      <div className="max-w-3xl mx-auto flex flex-col h-[calc(100vh-8rem)]">
-        <div className="px-4 pt-6 pb-4 space-y-1">
-          <h1 className="text-2xl font-bold text-foreground font-['Nunito']">{t('interview.title')}</h1>
-          <p className="text-sm text-muted-foreground">{t('interview.subtitle')}</p>
-        </div>
+      <div className="max-w-3xl mx-auto flex h-[calc(100vh-8rem)] flex-col px-4">
+        <header className="shrink-0 space-y-1 pt-8 pb-5">
+          <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-3xl">{t('interview.title')}</h1>
+          <p className="text-sm text-muted-foreground leading-relaxed">{t('interview.subtitle')}</p>
+        </header>
 
         {!started ? (
-          <div className="flex-1 flex items-center justify-center px-4">
-            <div className="w-full max-w-md space-y-4 text-center">
-              <p className="text-foreground font-medium">{t('interview.jobPrompt')}</p>
+          <div className="flex flex-1 items-center justify-center pb-12">
+            <div className="w-full max-w-md space-y-5">
+              <p className="text-center text-[15px] font-medium text-foreground">{t('interview.jobPrompt')}</p>
               <Input
                 value={jobType}
                 onChange={(e) => setJobType(e.target.value)}

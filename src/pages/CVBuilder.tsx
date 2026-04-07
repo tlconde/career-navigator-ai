@@ -3,13 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { Link, useLocation as useRouterLocation, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import Layout from '@/components/Layout';
+import { PageShell } from '@/components/PageShell';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Loader2, Download, Trash2, Sparkles, Pencil, Upload, ChevronDown, Check } from 'lucide-react';
+import { Loader2, Download, Trash2, PenLine, Pencil, Upload, ChevronDown, Check } from 'lucide-react';
 import { streamChat } from '@/lib/chat';
 import { useToast } from '@/hooks/use-toast';
 import type { CvFormExtraction } from '@/lib/cvFormTypes';
@@ -21,6 +22,7 @@ import type { EvaluateHandoff } from '@/lib/evaluateTypes';
 import { formatEvaluationContextForPrompt } from '@/lib/evaluateTypes';
 import { formatCvExtractionForEvaluate, saveCvEvaluatePrefill } from '@/lib/cvEvaluatePrefill';
 import { JobEvalInsightsCard } from '@/components/JobEvalInsightsCard';
+import { splitCvBodyAndMetaNote } from '@/lib/splitCvBodyAndMetaNote';
 
 interface Experience {
   jobTitle: string;
@@ -103,6 +105,8 @@ const CVBuilder = () => {
   const [jobEval, setJobEval] = useState<EvaluateHandoff | null>(null);
 
   const [cvOutput, setCvOutput] = useState('');
+  /** Trailing AI commentary (Note: …) — not part of the downloadable CV. */
+  const [cvMetaNote, setCvMetaNote] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
   const [currentScreen, setCurrentScreen] = useState<'form' | 'result'>('form');
@@ -369,19 +373,26 @@ STRICT RULES:
 - Use ONLY the contact details given above. Do NOT output placeholders like [Phone Number], [Email Address], [LinkedIn URL], or similar — write the real values or leave that part out.
 - If LinkedIn or GitHub are "(not provided)", omit those links entirely.
 - If Languages are provided, include a clear **Languages** section. If not provided and relevant, you may skip or mention one line only if the user listed languages elsewhere.
+- Do NOT add a horizontal rule (---), "Note:", or any meta commentary after the CV. Output ONLY the resume — no footers explaining optimizations, target roles, or disclaimers after the last section.
 `;
 
     let result = '';
+    setCvMetaNote(null);
     await streamChat({
       messages: [{ role: 'user', content: instruction }],
       type: 'cv',
       language: i18n.language?.split('-')[0] || 'en',
       onDelta: (chunk) => {
         result += chunk;
-        setCvOutput(result);
+        const { body, metaNote } = splitCvBodyAndMetaNote(result);
+        setCvOutput(body);
+        setCvMetaNote(metaNote);
       },
       onDone: () => {
         setIsGenerating(false);
+        const { body, metaNote } = splitCvBodyAndMetaNote(result);
+        setCvOutput(body);
+        setCvMetaNote(metaNote);
       },
       onError: (errorType) => {
         setIsGenerating(false);
@@ -401,21 +412,28 @@ TASK: Output ONLY the full updated CV as markdown. Merge all useful recommendati
 - Integrate concrete content from any "ATS Optimization", "Professional Advice", or similar sections into the right CV sections, then remove those meta sections OR reduce them to a 2-line optional note at the end.
 - Keep real contact details only — never use bracket placeholders.
 - If a Languages section was recommended and user data supports it, add it.
+- Do NOT append ---, "Note:", or any commentary after the CV body — output only the resume markdown.
 ${evaluationPromptBlock ? `\nWhen revising, apply these job-specific insights:\n${evaluationPromptBlock}\n` : ''}
 --- CV to revise ---
 ${cvOutput}
 --- END ---`;
 
+    setCvMetaNote(null);
     await streamChat({
       messages: [{ role: 'user', content: mergePrompt }],
       type: 'cv',
       language: i18n.language?.split('-')[0] || 'en',
       onDelta: (chunk) => {
         result += chunk;
-        setCvOutput(result);
+        const { body, metaNote } = splitCvBodyAndMetaNote(result);
+        setCvOutput(body);
+        setCvMetaNote(metaNote);
       },
       onDone: () => {
         setIsApplying(false);
+        const { body, metaNote } = splitCvBodyAndMetaNote(result);
+        setCvOutput(body);
+        setCvMetaNote(metaNote);
         toast({ title: t('cv.applyDone') });
       },
       onError: (errorType) => {
@@ -437,6 +455,7 @@ ${cvOutput}
 
   const startOver = () => {
     setCvOutput('');
+    setCvMetaNote(null);
     setCurrentScreen('form');
     setName('');
     setEmail('');
@@ -472,13 +491,15 @@ ${cvOutput}
   };
 
   const SectionHeader = ({ sectionKey, number, title }: { sectionKey: string; number: number; title: string }) => (
-    <CollapsibleTrigger className="flex items-center gap-3 w-full py-3 px-4 rounded-lg hover:bg-muted/50 transition-colors text-left">
+    <CollapsibleTrigger className="flex items-center gap-3 w-full py-3 px-4 rounded-lg hover:bg-muted/40 transition-colors text-left">
       <div
-        className={`flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold shrink-0 ${
-          sectionHasContent(sectionKey) ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+        className={`flex items-center justify-center w-7 h-7 rounded-full text-xs font-semibold shrink-0 border ${
+          sectionHasContent(sectionKey)
+            ? 'border-foreground/20 bg-foreground/[0.06] text-foreground'
+            : 'border-border bg-muted/60 text-muted-foreground'
         }`}
       >
-        {sectionHasContent(sectionKey) ? <Check className="h-3.5 w-3.5" /> : number}
+        {sectionHasContent(sectionKey) ? <Check className="h-3.5 w-3.5" strokeWidth={2.5} /> : number}
       </div>
       <span className="font-semibold text-foreground flex-1">{title}</span>
       <ChevronDown
@@ -491,13 +512,14 @@ ${cvOutput}
 
   return (
     <Layout>
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        {currentScreen === 'form' ? (
-          <>
-            <h1 className="text-2xl font-bold text-foreground font-['Nunito'] mb-1">{t('cv.title')}</h1>
-            <p className="text-sm text-muted-foreground mb-2">{t('cv.subtitle')}</p>
-            <p className="text-sm mb-6">
-              <Link to="/evaluate" state={{ evaluatePrefillSkills: buildUserInfo() }} className="text-primary hover:underline font-medium">
+      {currentScreen === 'form' ? (
+        <PageShell title={t('cv.title')} subtitle={t('cv.subtitle')}>
+            <p className="text-sm text-muted-foreground -mt-4 mb-8 leading-relaxed">
+              <Link
+                to="/evaluate"
+                state={{ evaluatePrefillSkills: buildUserInfo() }}
+                className="font-medium text-foreground underline decoration-border underline-offset-4 hover:decoration-primary"
+              >
                 {t('cv.openJobEvaluate')}
               </Link>
               <span className="text-muted-foreground"> — {t('cv.openJobEvaluateHint')}</span>
@@ -514,14 +536,14 @@ ${cvOutput}
               disabled={isParsingPdf}
             />
             <Card
-              className="border-dashed border-2 bg-muted/30 mb-6"
+              className="mb-8 border border-dashed border-border/90 bg-muted/15 shadow-none"
               onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
               onDrop={onDropUpload}
             >
               <CardContent className="p-4 sm:p-6 space-y-3">
                 <div className="flex items-start gap-3">
-                  <div className="rounded-lg bg-primary/10 p-2 text-primary shrink-0">
-                    <Upload className="h-5 w-5" />
+                  <div className="rounded-lg border border-border/70 bg-background p-2 text-muted-foreground shrink-0">
+                    <Upload className="h-5 w-5" strokeWidth={1.75} />
                   </div>
                   <div className="min-w-0 flex-1 space-y-1">
                     <p className="font-medium text-foreground">{t('cv.uploadTitle')}</p>
@@ -570,7 +592,7 @@ ${cvOutput}
             <div className="space-y-3">
           {/* Section 1: Personal Info */}
           <Collapsible open={openSections.personal} onOpenChange={() => toggleSection('personal')}>
-            <Card>
+            <Card className="border-border/80 shadow-none">
               <SectionHeader sectionKey="personal" number={1} title={t('cv.step1')} />
               <CollapsibleContent>
                 <CardContent className="px-4 pb-4 pt-2 space-y-3">
@@ -593,7 +615,7 @@ ${cvOutput}
 
           {/* Section 2: Skills */}
           <Collapsible open={openSections.skills} onOpenChange={() => toggleSection('skills')}>
-            <Card>
+            <Card className="border-border/80 shadow-none">
               <SectionHeader sectionKey="skills" number={2} title={t('cv.step2')} />
               <CollapsibleContent>
                 <CardContent className="px-4 pb-4 pt-2 space-y-3">
@@ -610,7 +632,7 @@ ${cvOutput}
 
           {/* Section 3: Experience */}
           <Collapsible open={openSections.experience} onOpenChange={() => toggleSection('experience')}>
-            <Card>
+            <Card className="border-border/80 shadow-none">
               <SectionHeader sectionKey="experience" number={3} title={t('cv.step3')} />
               <CollapsibleContent>
                 <CardContent className="px-4 pb-4 pt-2 space-y-3">
@@ -632,7 +654,11 @@ ${cvOutput}
                       </CardContent>
                     </Card>
                   ))}
-                  <button type="button" onClick={addExperience} className="text-sm text-primary hover:underline flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={addExperience}
+                    className="flex items-center gap-1 text-sm font-medium text-foreground underline decoration-border underline-offset-4 hover:decoration-primary"
+                  >
                     {t('cv.addExperience')}
                   </button>
                 </CardContent>
@@ -642,7 +668,7 @@ ${cvOutput}
 
           {/* Section 4: Education */}
           <Collapsible open={openSections.education} onOpenChange={() => toggleSection('education')}>
-            <Card>
+            <Card className="border-border/80 shadow-none">
               <SectionHeader sectionKey="education" number={4} title={t('cv.step4')} />
               <CollapsibleContent>
                 <CardContent className="px-4 pb-4 pt-2 space-y-3">
@@ -663,7 +689,11 @@ ${cvOutput}
                       </CardContent>
                     </Card>
                   ))}
-                  <button type="button" onClick={addEducation} className="text-sm text-primary hover:underline flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={addEducation}
+                    className="flex items-center gap-1 text-sm font-medium text-foreground underline decoration-border underline-offset-4 hover:decoration-primary"
+                  >
                     {t('cv.addEducation')}
                   </button>
                 </CardContent>
@@ -673,7 +703,7 @@ ${cvOutput}
 
           {/* Section 5: Target Role & Generate */}
           <Collapsible open={openSections.generate} onOpenChange={() => toggleSection('generate')}>
-            <Card>
+            <Card className="border-border/80 shadow-none">
               <SectionHeader sectionKey="generate" number={5} title={t('cv.step5')} />
               <CollapsibleContent>
                 <CardContent className="px-4 pb-4 pt-2 space-y-3">
@@ -696,7 +726,7 @@ ${cvOutput}
                     {isGenerating ? (
                       <><Loader2 className="h-4 w-4 animate-spin mr-2" /> {t('cv.generating')}</>
                     ) : (
-                      <><Sparkles className="h-4 w-4 mr-2" /> {cvOutput ? t('cv.regenerate') : t('cv.generate')}</>
+                      <><PenLine className="h-4 w-4 mr-2" strokeWidth={1.75} /> {cvOutput ? t('cv.regenerate') : t('cv.generate')}</>
                     )}
                   </Button>
                 </CardContent>
@@ -704,16 +734,29 @@ ${cvOutput}
             </Card>
           </Collapsible>
             </div>
-          </>
+        </PageShell>
         ) : (
-          <div className="mt-8 space-y-4">
+          <PageShell showHeader={false}>
+          <div className="space-y-6">
             {jobEval && (
               <JobEvalInsightsCard jobEval={jobEval} onDismiss={clearJobEval} variant="preview" />
             )}
+            {cvMetaNote && (
+              <Card className="border border-dashed border-border bg-muted/20 shadow-none">
+                <CardContent className="p-4 space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('cv.coachNoteTitle')}</p>
+                  <p className="text-xs text-muted-foreground">{t('cv.coachNoteHint')}</p>
+                  <div className="prose prose-sm max-w-none text-foreground">
+                    <ReactMarkdown>{cvMetaNote}</ReactMarkdown>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <h2 className="text-lg font-bold font-['Nunito']">{t('cv.preview')}</h2>
-                <p className="text-muted-foreground text-sm mt-1">{t('cv.previewHelp')}</p>
+                <h2 className="font-heading text-xl font-semibold text-foreground">{t('cv.preview')}</h2>
+                <p className="text-muted-foreground text-sm mt-1.5 leading-relaxed">{t('cv.previewHelp')}</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button onClick={downloadCV} variant="outline" size="sm" type="button">
@@ -729,7 +772,7 @@ ${cvOutput}
                   {isApplying ? (
                     <><Loader2 className="h-4 w-4 animate-spin mr-2" /> {t('cv.applying')}</>
                   ) : (
-                    <><Sparkles className="h-4 w-4 mr-2" /> {t('cv.applySuggestions')}</>
+                    <><PenLine className="h-4 w-4 mr-2" strokeWidth={1.75} /> {t('cv.applySuggestions')}</>
                   )}
                 </Button>
               </div>
@@ -746,16 +789,21 @@ ${cvOutput}
               <TabsContent value="edit" className="mt-4">
                 <Textarea
                   value={cvOutput}
-                  onChange={(e) => setCvOutput(e.target.value)}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    const { body, metaNote } = splitCvBodyAndMetaNote(v);
+                    setCvOutput(body);
+                    setCvMetaNote(metaNote);
+                  }}
                   className="min-h-[min(70vh,520px)] font-mono text-sm leading-relaxed resize-y"
                   spellCheck={false}
-                  disabled={isApplying}
+                  disabled={isGenerating || isApplying}
                   aria-label={t('cv.editMarkdown')}
                 />
               </TabsContent>
               <TabsContent value="preview" className="mt-4">
-                <Card>
-                  <CardContent className="p-6 prose prose-sm max-w-none dark:prose-invert">
+                <Card className="border-border/80 shadow-none">
+                  <CardContent className="p-6 prose prose-sm max-w-none text-foreground prose-headings:font-heading">
                     <ReactMarkdown>{cvOutput}</ReactMarkdown>
                   </CardContent>
                 </Card>
@@ -776,8 +824,8 @@ ${cvOutput}
               </Button>
             </div>
           </div>
+          </PageShell>
         )}
-      </div>
     </Layout>
   );
 };

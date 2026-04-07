@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import Layout from '@/components/Layout';
+import { PageShell } from '@/components/PageShell';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -152,13 +153,10 @@ const Evaluate = () => {
 
   return (
     <Layout>
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-foreground font-['Nunito'] mb-1">{t('evaluate.title')}</h1>
-        <p className="text-sm text-muted-foreground mb-6">{t('evaluate.subtitle')}</p>
-
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium text-foreground mb-1 block">{t('evaluate.jobDesc')}</label>
+      <PageShell title={t('evaluate.title')} subtitle={t('evaluate.subtitle')}>
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground block">{t('evaluate.jobDesc')}</label>
             <Textarea
               value={jobDesc}
               onChange={(e) => setJobDesc(e.target.value)}
@@ -167,8 +165,8 @@ const Evaluate = () => {
             />
           </div>
 
-          <div>
-            <label className="text-sm font-medium text-foreground mb-1 block">{t('evaluate.jobUrlLabel')}</label>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground block">{t('evaluate.jobUrlLabel')}</label>
             <Input
               type="url"
               inputMode="url"
@@ -180,8 +178,8 @@ const Evaluate = () => {
             <p className="text-xs text-muted-foreground mt-1.5">{t('evaluate.jobUrlHint')}</p>
           </div>
 
-          <div>
-            <label className="text-sm font-medium text-foreground mb-1 block">{t('evaluate.yourSkills')}</label>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground block">{t('evaluate.yourSkills')}</label>
             <Textarea
               value={userSkills}
               onChange={(e) => setUserSkills(e.target.value)}
@@ -191,11 +189,11 @@ const Evaluate = () => {
             <p className="text-xs text-muted-foreground mt-1.5">{t('evaluate.skillsPrefillHint')}</p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex flex-col gap-2 pt-1 sm:flex-row">
             <Button
               onClick={analyze}
               disabled={!canAnalyze || isLoading || isFetchingUrl}
-              className="w-full sm:flex-1"
+              className="w-full sm:max-w-xs"
             >
               {isLoading ? (
                 <>
@@ -219,22 +217,22 @@ const Evaluate = () => {
 
         {result && (
           <>
-            <Card className="mt-6">
-              <CardContent className="p-6 prose prose-sm max-w-none dark:prose-invert">
+            <Card className="mt-10 border-border/80 shadow-none">
+              <CardContent className="p-6 md:p-8 prose prose-sm max-w-none text-foreground prose-headings:font-heading prose-headings:font-semibold prose-a:text-foreground prose-a:underline-offset-4">
                 <ReactMarkdown>{result}</ReactMarkdown>
               </CardContent>
             </Card>
 
             {isStructuredLoading && (
-              <p className="mt-4 text-sm text-muted-foreground flex items-center gap-2">
+              <p className="mt-6 text-sm text-muted-foreground flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin shrink-0" />
                 {t('evaluate.preparingHandoff')}
               </p>
             )}
 
             {!isStructuredLoading && (
-              <div className="mt-4">
-                <Button asChild className="w-full sm:w-auto">
+              <div className="mt-6">
+                <Button asChild variant="default" className="w-full sm:w-auto">
                   <Link
                     to="/cv"
                     state={{
@@ -255,7 +253,7 @@ const Evaluate = () => {
             )}
           </>
         )}
-      </div>
+      </PageShell>
     </Layout>
   );
 };

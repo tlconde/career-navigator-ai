@@ -17,20 +17,20 @@ const AdvancedTool = () => {
   if (toolId === 'tracker') {
     return (
       <Layout>
-        <div className="max-w-6xl mx-auto flex flex-col min-h-[calc(100vh-6rem)]">
-          <div className="px-4 pt-6 pb-2">
+        <div className="mx-auto flex min-h-[calc(100vh-6rem)] max-w-6xl flex-col px-4">
+          <header className="shrink-0 pb-2 pt-8">
             <Link
               to="/advanced"
-              className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4"
+              className="mb-5 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-4 w-4" strokeWidth={1.75} />
               {t('advanced.back')}
             </Link>
-            <h1 className="text-2xl font-bold text-foreground font-['Nunito']">
+            <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
               {t('advanced.tools.tracker.title')}
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">{t('advanced.tools.tracker.desc')}</p>
-          </div>
+            <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">{t('advanced.tools.tracker.desc')}</p>
+          </header>
           <ApplicationTracker />
         </div>
       </Layout>
@@ -66,21 +66,21 @@ const AdvancedTool = () => {
 
   return (
     <Layout>
-      <div className="max-w-3xl mx-auto flex flex-col h-[calc(100vh-8rem)]">
-        <div className="px-4 pt-6 pb-2 shrink-0">
+      <div className="mx-auto flex h-[calc(100vh-8rem)] max-w-3xl flex-col px-4">
+        <header className="shrink-0 pb-3 pt-8">
           <Link
             to="/advanced"
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-3"
+            className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4" strokeWidth={1.75} />
             {t('advanced.back')}
           </Link>
-          <h1 className="text-2xl font-bold text-foreground font-['Nunito']">
+          <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
             {t(`advanced.tools.${toolId}.title`)}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">{t(`advanced.tools.${toolId}.desc`)}</p>
-        </div>
-        <div className="flex-1 min-h-0 flex flex-col">
+          <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">{t(`advanced.tools.${toolId}.desc`)}</p>
+        </header>
+        <div className="flex min-h-0 flex-1 flex-col">
           <ChatInterface
             type={chatType}
             inputPlaceholder={placeholder}

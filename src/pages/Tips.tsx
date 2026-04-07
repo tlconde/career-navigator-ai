@@ -15,11 +15,11 @@ const Tips = () => {
 
   return (
     <Layout>
-      <div className="max-w-3xl mx-auto flex flex-col h-[calc(100vh-8rem)]">
-        <div className="px-4 pt-6 pb-4 space-y-1">
-          <h1 className="text-2xl font-bold text-foreground font-['Nunito']">{t('tips.title')}</h1>
-          <p className="text-sm text-muted-foreground">{t('tips.subtitle')}</p>
-        </div>
+      <div className="mx-auto flex h-[calc(100vh-8rem)] max-w-3xl flex-col px-4">
+        <header className="shrink-0 space-y-1 pb-4 pt-8">
+          <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-3xl">{t('tips.title')}</h1>
+          <p className="text-sm text-muted-foreground leading-relaxed">{t('tips.subtitle')}</p>
+        </header>
         <ChatInterface type="tips" quickPrompts={quickPrompts} />
       </div>
     </Layout>

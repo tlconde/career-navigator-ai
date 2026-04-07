@@ -160,7 +160,7 @@ const ApplicationTracker = () => {
   };
 
   return (
-    <div className="space-y-4 px-4 pb-8 max-w-6xl mx-auto w-full">
+    <div className="w-full space-y-4 pb-10">
       <input
         ref={importInputRef}
         type="file"
@@ -187,7 +187,7 @@ const ApplicationTracker = () => {
         </div>
       </div>
 
-      <div className="rounded-xl border border-border overflow-x-auto">
+      <div className="overflow-x-auto rounded-xl border border-border/80">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/40 text-left">

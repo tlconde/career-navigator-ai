@@ -20,23 +20,26 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <header className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 text-foreground hover:opacity-80 transition-opacity">
-            <Briefcase className="h-6 w-6 text-primary" />
-            <span className="font-bold text-lg font-['Nunito']">{t('app.title')}</span>
+      <header className="sticky top-0 z-50 border-b border-border/80 bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80">
+        <div className="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between gap-4">
+          <Link
+            to="/"
+            className="flex items-center gap-2.5 text-foreground transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
+          >
+            <Briefcase className="h-5 w-5 text-muted-foreground" strokeWidth={1.75} aria-hidden />
+            <span className="font-heading text-base font-semibold tracking-tight">{t('app.title')}</span>
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-0.5">
             {navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-3 py-2 rounded-md text-sm transition-colors ${
                   location.pathname === item.path
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    ? 'bg-muted font-medium text-foreground'
+                    : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
                 }`}
               >
                 {item.label}
@@ -57,16 +60,16 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
         {/* Mobile nav */}
         {menuOpen && (
-          <nav className="md:hidden border-t border-border bg-card px-4 py-2">
+          <nav className="md:hidden border-t border-border bg-background px-4 py-2">
             {navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
                 onClick={() => setMenuOpen(false)}
-                className={`block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`block px-3 py-2 rounded-md text-sm transition-colors ${
                   location.pathname === item.path
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    ? 'bg-muted font-medium text-foreground'
+                    : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
                 }`}
               >
                 {item.label}
@@ -78,8 +81,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
       <main className="flex-1">{children}</main>
 
-      <footer className="border-t border-border bg-card/50 py-6">
-        <div className="max-w-6xl mx-auto px-4 text-center text-sm text-muted-foreground space-y-1">
+      <footer className="border-t border-border/80 py-8 mt-auto">
+        <div className="max-w-6xl mx-auto px-4 text-center text-sm text-muted-foreground space-y-2">
           <p>{t('app.footer')}</p>
           <p>
             <Link to="/advanced" className="underline hover:text-foreground transition-colors">
