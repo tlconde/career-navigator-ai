@@ -107,7 +107,7 @@ const Evaluate = () => {
       } else {
         toast({
           title: t('evaluate.urlFetchFailed'),
-          description: !res.ok ? res.error : undefined,
+          description: 'error' in res ? res.error : undefined,
           variant: 'destructive',
         });
         if (!effectiveJobDesc) return;
