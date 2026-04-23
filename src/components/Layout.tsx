@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LanguagePicker from './LanguagePicker';
-import { Briefcase, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
@@ -20,56 +20,69 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <header className="sticky top-0 z-50 border-b border-border/80 bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80">
-        <div className="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between gap-4">
+      {/* Top thin rule — editorial masthead */}
+      <div className="h-[3px] bg-ink" aria-hidden />
+
+      <header className="sticky top-0 z-50 border-b border-ink/15 bg-background/92 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-5 md:px-8 py-3 flex items-center justify-between gap-6">
           <Link
             to="/"
-            className="flex items-center gap-2.5 text-foreground transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
+            className="group flex items-baseline gap-2 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
           >
-            <Briefcase className="h-5 w-5 text-muted-foreground" strokeWidth={1.75} aria-hidden />
-            <span className="font-heading text-base font-semibold tracking-tight">{t('app.title')}</span>
+            <span className="font-display text-2xl md:text-[1.75rem] font-medium italic tracking-tight leading-none">
+              Career<span className="text-primary">Bridge</span>
+            </span>
+            <span className="hidden sm:inline font-mono-mark text-[10px] uppercase tracking-[0.18em] text-muted-foreground translate-y-[-2px]">
+              No. 01
+            </span>
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-0.5">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`px-3 py-2 rounded-md text-sm transition-colors ${
-                  location.pathname === item.path
-                    ? 'bg-muted font-medium text-foreground'
-                    : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
+          <nav className="hidden md:flex items-center gap-1">
+            {navItems.map((item) => {
+              const active = location.pathname === item.path;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`relative px-3 py-2 text-[13px] tracking-wide transition-colors ${
+                    active
+                      ? 'text-foreground font-medium'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {item.label}
+                  {active && (
+                    <span className="absolute left-3 right-3 -bottom-px h-[2px] bg-primary" aria-hidden />
+                  )}
+                </Link>
+              );
+            })}
           </nav>
 
           <div className="flex items-center gap-2">
             <LanguagePicker />
             <button
-              className="md:hidden p-2 rounded-lg hover:bg-muted"
+              className="md:hidden p-2 rounded-md hover:bg-muted text-foreground"
               onClick={() => setMenuOpen(!menuOpen)}
+              aria-label="Menu"
             >
               {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile nav */}
         {menuOpen && (
-          <nav className="md:hidden border-t border-border bg-background px-4 py-2">
+          <nav className="md:hidden border-t border-ink/15 bg-background px-5 py-2">
             {navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
                 onClick={() => setMenuOpen(false)}
-                className={`block px-3 py-2 rounded-md text-sm transition-colors ${
+                className={`block px-2 py-3 text-sm border-b border-ink/10 last:border-0 transition-colors ${
                   location.pathname === item.path
-                    ? 'bg-muted font-medium text-foreground'
-                    : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+                    ? 'text-primary font-medium'
+                    : 'text-foreground hover:text-primary'
                 }`}
               >
                 {item.label}
@@ -81,26 +94,55 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
       <main className="flex-1">{children}</main>
 
-      <footer className="border-t border-border/80 py-8 mt-auto">
-        <div className="max-w-6xl mx-auto px-4 text-center text-sm text-muted-foreground space-y-2">
-          <p>{t('app.footer')}</p>
-          <p>
-            <Link to="/advanced" className="underline hover:text-foreground transition-colors">
-              {t('app.footerMoreTools')}
+      <footer className="mt-24 bg-ink text-ink-foreground">
+        <div className="max-w-7xl mx-auto px-5 md:px-8 py-14 grid gap-10 md:grid-cols-12">
+          <div className="md:col-span-6 space-y-3">
+            <div className="font-display text-3xl md:text-4xl italic leading-none">
+              Career<span className="text-primary">Bridge</span>
+            </div>
+            <p className="text-sm text-ink-foreground/65 max-w-md leading-relaxed">
+              {t('app.footer')}
+            </p>
+          </div>
+          <div className="md:col-span-3 space-y-2 text-sm">
+            <p className="font-mono-mark uppercase tracking-[0.18em] text-[10px] text-ink-foreground/50 mb-2">
+              Tools
+            </p>
+            {navItems.slice(1).map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className="block text-ink-foreground/80 hover:text-primary transition-colors"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+          <div className="md:col-span-3 space-y-2 text-sm">
+            <p className="font-mono-mark uppercase tracking-[0.18em] text-[10px] text-ink-foreground/50 mb-2">
+              Source
+            </p>
+            <p className="text-ink-foreground/65 leading-relaxed">
+              {t('app.footerCredit')}{' '}
+              <a
+                href="https://github.com/santifer/career-ops"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-ink-foreground hover:text-primary underline underline-offset-4 decoration-ink-foreground/30"
+              >
+                career-ops
+              </a>
+            </p>
+            <Link to="/advanced" className="inline-block text-ink-foreground/80 hover:text-primary">
+              {t('app.footerMoreTools')} →
             </Link>
-            <span aria-hidden className="mx-1.5">
-              ·
-            </span>
-            {t('app.footerCredit')}{' '}
-            <a
-              href="https://github.com/santifer/career-ops"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-foreground transition-colors"
-            >
-              career-ops
-            </a>
-          </p>
+          </div>
+        </div>
+        <div className="border-t border-ink-foreground/12">
+          <div className="max-w-7xl mx-auto px-5 md:px-8 py-4 flex justify-between text-[11px] font-mono-mark uppercase tracking-[0.18em] text-ink-foreground/45">
+            <span>Vol. 01 · Edition 2025</span>
+            <span>Made with care</span>
+          </div>
         </div>
       </footer>
     </div>
