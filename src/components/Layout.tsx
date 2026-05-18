@@ -140,7 +140,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         </div>
         <div className="border-t border-ink-foreground/12">
           <div className="max-w-7xl mx-auto px-5 md:px-8 py-4 flex justify-between text-[11px] font-mono-mark uppercase tracking-[0.18em] text-ink-foreground/45">
-            <span>Vol. 01 · Edition 2025</span>
+            <span>Vol. 01 · Edition 2026</span>
             <span>Made with care</span>
           </div>
         </div>
