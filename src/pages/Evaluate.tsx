@@ -7,7 +7,6 @@ import { PageShell } from '@/components/PageShell';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, FileEdit } from 'lucide-react';
 import { streamChat } from '@/lib/chat';
 import { streamChatToString } from '@/lib/streamChatToString';
