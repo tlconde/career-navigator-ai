@@ -7,7 +7,6 @@ import { PageShell } from '@/components/PageShell';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, FileEdit } from 'lucide-react';
 import { streamChat } from '@/lib/chat';
 import { streamChatToString } from '@/lib/streamChatToString';
@@ -217,11 +216,14 @@ const Evaluate = () => {
 
         {result && (
           <>
-            <Card className="mt-10 border-border/80 shadow-none">
-              <CardContent className="p-6 md:p-8 prose prose-sm max-w-none text-foreground prose-headings:font-heading prose-headings:font-semibold prose-a:text-foreground prose-a:underline-offset-4">
+            <article className="mt-12 border-t-2 border-ink pt-8">
+              <p className="font-mono-mark text-[10px] uppercase tracking-[0.22em] text-primary mb-4">
+                The Analysis
+              </p>
+              <div className="prose prose-base max-w-none text-foreground prose-headings:font-display prose-headings:font-normal prose-headings:tracking-tight prose-h2:text-2xl prose-h2:mt-10 prose-h3:text-xl prose-a:text-foreground prose-a:underline-offset-4 prose-a:decoration-primary/50 hover:prose-a:decoration-primary prose-strong:text-foreground prose-strong:font-medium prose-hr:border-ink/15">
                 <ReactMarkdown>{result}</ReactMarkdown>
-              </CardContent>
-            </Card>
+              </div>
+            </article>
 
             {isStructuredLoading && (
               <p className="mt-6 text-sm text-muted-foreground flex items-center gap-2">
